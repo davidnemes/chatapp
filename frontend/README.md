@@ -4,8 +4,8 @@
 ```
 npm install
 ```
-## !! You also have to set env.config.js !!
-## --> serverLanIp
+### You also have to set `env.config.js`!
+#### --> `serverLanIp`
 
 
 ### Compiles and hot-reloads for development
