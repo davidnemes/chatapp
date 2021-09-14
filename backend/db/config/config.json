@@ -1,0 +1,16 @@
+{
+    "development": {
+        "storage": "/home/david/OwnProjects/chatapp/backend/db/dev.db.sqlite",
+        "dialect": "sqlite"
+    },
+    "test": {
+        "storage": ":memory:",
+        "dialect": "sqlite",
+        "logging": false
+    },
+    "production": {
+        "storage": "/home/david/OwnProjects/chatapp/backend/db/prod.db.sqlite",
+        "dialect": "sqlite"
+    }
+  }
+  
