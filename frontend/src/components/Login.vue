@@ -45,6 +45,7 @@ export default {
             unClass: "",
             pwClass: "",
             loginErrMsg: "",
+            cssRoot: null,
         }
     },
     methods: {
@@ -131,12 +132,30 @@ export default {
             sessionStorage.setItem("x-access-token", res.data.accessToken)
             sessionStorage.setItem("user", JSON.stringify(res.data.user))
             this.$router.push("/home")
+        },
+
+        // CSS functions
+        setCssVarValue(varName, valueToSet) {
+            try {
+                this.cssRoot.style.setProperty(varName, valueToSet +"px");
+            } catch(err) {
+                console.log(err);
+                return false
+            }
+            return true
+        },
+        setCSSandHeights() {
+            this.cssRoot = document.querySelector(':root')
+            this.setCssVarValue("--appMT", 60)
         }
     },
     created() {
         if(sessionStorage.getItem("x-access-token")) {
             this.$router.push("/home")
         }
+
+        // set css
+        this.setCSSandHeights()
     }
 }
 </script>
@@ -149,7 +168,10 @@ export default {
 }
 #drop {
     width: 20%;
-} 
+}
+#app {
+    margin-top: val(--appMT);
+}
 @media screen and (max-width: 500px){
     #title {
         justify-content: center;

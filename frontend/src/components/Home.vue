@@ -11,22 +11,19 @@
             </form>
         </div>
         <div id="chatroomDiv">
-            <ul>
-                <div v-for="message, index in messages" :key="index" class="messageDiv">
-                    <img v-if="!message.self" src="" alt="profImg">
-                    <li class="message m-2" :class="message.self ? selfClass : ''">
-                        {{ message.text }}
-                    </li>
-                    {{ message.date }}
-                </div>
-            </ul>
+            <Chatroom :messages="messages" />
         </div>
     </div>
 </template>
 
 <script>
+import Chatroom from "./Chatroom.vue"
+
 export default {
     name: "Home",
+    components: {
+        Chatroom,
+    },
     data() {
         return {
             messageToSend: "",
@@ -36,7 +33,6 @@ export default {
                 { userId: 1, date: Date(), text: "valami uzenet", self: true},
                 { userId: 2, date: Date().split(" GMT")[0], text: "valami más uzenet", self: false},
             ],
-            selfClass: "self"
         }
     },
     methods: {
@@ -71,8 +67,11 @@ export default {
             }
             return true
         },
-        setHeight(diff) {
-            this.setCssVarValue("--innerHeight", window.innerHeight + diff)
+        setCSSandHeights() {
+            this.cssRoot = document.querySelector(':root')
+            this.setCssVarValue("--innerHeight", window.innerHeight)
+            this.setCssVarValue("--chatRoomHeight", window.innerHeight - 140)
+            this.setCssVarValue("--appMT", 0)
         }
     },
     created() {
@@ -82,8 +81,7 @@ export default {
         }
 
         // Set cssRoot and height
-        this.cssRoot = document.querySelector(':root')
-        this.setHeight(-60)
+        this.setCSSandHeights()
     },
     async mounted() {
         const res = await this.axios("/api/wstoken")
@@ -110,6 +108,7 @@ export default {
 <style>
 :root {
     --innerHeight: 100px; /* default value */
+    --chatRoomHeight: 50px; /* default value; for Chatroom component */
 }
 
 #outerDiv {
@@ -122,18 +121,5 @@ export default {
 #chatroomDiv {
     width: 67%;
     height: var(--innerHeight);
-}
-.messageDiv {
-    display: flex;
-}
-.message {
-    display: inline;
-    padding: 0.5em;
-    border-radius: 2em;
-    background-color: lightgray;
-}
-.self {
-    background-color: blue;
-    color: white;
 }
 </style>
