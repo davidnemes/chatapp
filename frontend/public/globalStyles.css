@@ -156,9 +156,11 @@ h4.card-title {
 }
 
 .media-chat .media-body p.meta {
+    text-align: start;
     background-color: transparent !important;
     padding: 0;
-    opacity: .8
+    opacity: .8;
+    color: #9b9b9b !important;
 }
 
 .media-meta-day {
@@ -211,7 +213,7 @@ h4.card-title {
 
 .media-chat {
     padding-right: 64px;
-    margin-bottom: 0
+    margin-bottom: 0;
 }
 
 .media {
@@ -251,7 +253,7 @@ h4.card-title {
     align-items: center;
     padding: 12px 20px;
     height: 70px;
-    background-color: #f9fafb
+    background-color: #e6e7e8
 }
 
 .publisher>*:first-child {
@@ -293,17 +295,6 @@ textarea {
 .file-group {
     position: relative;
     overflow: hidden
-}
-
-.publisher-btn {
-    background-color: transparent;
-    border: none;
-    color: #cac7c7;
-    font-size: 16px;
-    cursor: pointer;
-    overflow: -moz-hidden-unscrollable;
-    -webkit-transition: .2s linear;
-    transition: .2s linear
 }
 
 .file-group input[type="file"] {

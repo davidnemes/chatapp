@@ -11,7 +11,7 @@
             </form>
         </div>
         <div id="chatroomDiv">
-            <Chatroom :messages="messages" />
+            <Chatroom :messages="currentMessages" @postMsg="msgPosted"/>
         </div>
     </div>
 </template>
@@ -29,9 +29,14 @@ export default {
             messageToSend: "",
             webSocket: null,
             cssRoot: null,
-            messages: [
-                { userId: 1, date: Date(), text: "valami uzenet", self: true},
-                { userId: 2, date: Date().split(" GMT")[0], text: "valami más uzenet", self: false},
+            currentMessages: [
+                { userId: 1, text: "Szia, hogy vagy?", self: true},
+                { userId: 2, text: "Szia, jól!", self: false},
+                { userId: 2, text: "kicsit unatkozom de amugy ok", self: false},
+                { userId: 1, text: "Na, király", self: true},
+                { userId: 1, text: "Tenisz ma 6?", self: true},
+                { userId: 2, text: "K", self: false},
+                { userId: 1, text: "Zsir", self: true},
             ],
         }
     },
@@ -51,6 +56,16 @@ export default {
         sendMessage(event) {
             event.preventDefault()
             this.webSocket.send(JSON.stringify({ message: this.messageToSend }))
+        },
+
+        msgPosted(msg) {
+            let user = JSON.parse(sessionStorage.getItem("user"))
+            this.currentMessages.push({
+                userId: user.userId,
+                text: msg,
+                self: true
+            })
+
         },
 
         // Functions with CSS variables
