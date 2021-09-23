@@ -4,9 +4,10 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const authJwt = require('./middlewares/authJwt')
 
-var messageRouter = require('./routes/message.routes');
 var usersRouter = require('./routes/users.routes');
 var wsRouter = require('./routes/ws.routes');
+var groupMessageRouter = require('./routes/groupmessages.routes');
+var groupMemberRouter = require('./routes/groupmembers.routes.js')
 
 var app = express();
 
@@ -22,7 +23,8 @@ app.use("/home", (req, res, next) => res.redirect("/"));
 
 // api routes
 app.use('/api/users', usersRouter);
-app.use('/api/message', messageRouter);
+app.use('/api/groupmessages', groupMessageRouter);
+app.use('/api/groupmembers', groupMemberRouter);
 app.use('/api/wstoken', wsRouter);
 
 // 404

@@ -1,7 +1,9 @@
 const { WsToken } = require("../db/models")
 
 const wsController = async (ws, wss, req) => {
-    const token = req.url.split("token=")[1]
+
+    // Validating token
+    const token = req.url.split("?token=")[1]
     if(token == req.url) {
         console.log("Unauthorized ws request came in");
         ws.send("Unauthorized")
@@ -43,6 +45,8 @@ const wsController = async (ws, wss, req) => {
     })
 }
 
+// CONNECTING
+
 function genToken() {
     var length = 6,
         charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
@@ -51,6 +55,13 @@ function genToken() {
         retVal += charset.charAt(Math.floor(Math.random() * n));
     }
     return retVal;
+}
+const checkToken = async (token) => {
+    if (token.expiration < Date.now()) {
+        await WsToken.destroy({ where: {
+            id: token.id
+        }})
+    }
 }
 const wsCreateToken = async (req, res) => {
     const expirationTime = Date.now() + 10 * 1000
@@ -69,13 +80,6 @@ const wsCreateToken = async (req, res) => {
     // destroy old tokens
     try {
         let tokens = await WsToken.findAll()
-        const checkToken = async (token) => {
-            if (token.expiration < Date.now()) {
-                await WsToken.destroy({ where: {
-                    id: token.id
-                }})
-            }
-        }
         for (let i=0; i<tokens.length; i++) {
             await checkToken(tokens[i])
         }

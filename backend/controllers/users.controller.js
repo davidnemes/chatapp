@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
 const { User, Role } = require("../db/models");
-const user = require("../db/models/user");
 
 const login = async (req, res) => {
     if (!req.body.username || !req.body.password) {
@@ -101,7 +100,14 @@ const signup = async (req, res) => {
 
 const findAll = async (req, res) => {
     try {
-        let users = await User.findAll()
+        let users = await User.findAll({
+            attributes: ["id", "username"],
+            include: {
+                model: Role,
+                attributes: ["role", "weight"],
+                as: "Role"
+            }
+        })
         res.status(200).json(users)
     } catch (err) {
         res.status(500).json({ message: "Server error" })
