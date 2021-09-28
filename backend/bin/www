@@ -8,7 +8,8 @@ require('dotenv').config();
 var app = require('../app');
 var debug = require('debug')('backend:server');
 var http = require('http');
-var WebSocket = require('ws')
+var WebSocket = require('ws');
+var LanIP = require("../config/getLanIP")
 
 /**
  * Get port from environment and store in Express.
@@ -99,4 +100,6 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
+  console.log('Listening on ' + bind);
+  console.log('-->  http://' + LanIP + ":" + addr.port);
 }

@@ -7,7 +7,7 @@
             <button class="btn btn-xs btn-secondary" href="#" data-abc="true">Részletek</button>
         </div>
         <div class="ps-container ps-theme-default ps-active-y" id="chat-content">
-            <div class="media media-chat">
+            <!-- <div class="media media-chat">
                 <img class="avatar" src="https://img.icons8.com/color/36/000000/administrator-male.png" alt="...">
                 <div class="media-body">
                     <p>Hi</p>
@@ -64,17 +64,22 @@
                 <div class="media-body">
                     <p>Okay then see you on sunday!!</p>
                 </div>
-            </div>
-            <div v-for="msgGroup, index in renderMsgs" 
-                :key="index" 
-                class="media media-chat"
-                :class="msgGroup.self ? 'media-chat-reverse': ''"
-                >
-                <img v-if="!msgGroup.self" class="avatar" :src="msgGroup.imgSrc" alt="...">
-                <div class="media-body">
-                    <p v-for="msg, index in msgGroup.msgs" :key="index"> {{ msg.text }}</p>
-                    <p class="meta">20:00</p>
+            </div> -->
+            <div v-if="messages.length > 0">
+                <div v-for="msgGroup, index in renderMsgs" 
+                    :key="index" 
+                    class="media media-chat"
+                    :class="msgGroup.self ? 'media-chat-reverse': ''"
+                    >
+                    <img v-if="!msgGroup.self" class="avatar" :src="msgGroup.imgSrc" alt="...">
+                    <div class="media-body">
+                        <p v-for="msg, index in msgGroup.msgs" :key="index"> {{ msg }}</p>
+                        <p class="meta">{{ msgGroup.ttw }}</p>
+                    </div>
                 </div>
+            </div>
+            <div v-else>
+                <Loading class=""></Loading>
             </div>
             <!-- <div class="ps-scrollbar-x-rail" style="left: 0px; bottom: 0px;">
                 <div class="ps-scrollbar-x" tabindex="0" style="left: 0px; width: 0px;"></div>
@@ -107,28 +112,46 @@ export default {
         renderMsgs() {
             let newMsgs = []
             let msgGroup = {
+                // defaults
                 self: false,
-                msgs: []
+                msgs: [],
+                ttw: "", // short for timeToWrite
             }
             let previousId = null
+            let previousDate = null
+
             this.messages.forEach(msg => {
                 if (msg.userId == previousId) {
-                    msgGroup.msgs.push(msg)
+                    // new group if prev msg is older than 3 mins
+                    let diff = msg.date.getTime() - previousDate.getTime()
+                    if (diff > (3*60*1000)) {
+                        // push previous
+                        newMsgs.push(msgGroup)
+                        // set current
+                        msgGroup = { msgs: [] }
+                        msgGroup.self = msg.self
+                        msgGroup.imgSrc = `/images/profpic-userId-${msg.userId}.jpg`
+                        msgGroup.msgs.push(msg.message)
+                        msgGroup.ttw = this.timeToWrite(msg.date)
+                    } else {
+                        msgGroup.msgs.push(msg.message)
+                        msgGroup.ttw = this.timeToWrite(msg.date)
+                    }
                 } else {
                     if (previousId !== null) {
                         newMsgs.push(msgGroup)
-                        msgGroup = {
-                            self: false,
-                            msgs: []
-                        }                        
+                        msgGroup = { msgs: [] }
                     }
                     msgGroup.self = msg.self
                     msgGroup.imgSrc = `/images/profpic-userId-${msg.userId}.jpg`
-                    msgGroup.msgs.push(msg)
+                    msgGroup.msgs.push(msg.message)
+                    msgGroup.ttw = this.timeToWrite(msg.date)
                 }
 
+                previousDate = msg.date
                 previousId = msg.userId
             });
+            // push the last one too
             newMsgs.push(msgGroup)
 
             return newMsgs
@@ -150,6 +173,22 @@ export default {
         scrollDown() {
             let scroll = this.jQuery("#chat-content").prop("scrollHeight")
             this.jQuery("#chat-content")[0].scrollTop = scroll
+        },
+        timeToWrite(date) {
+            let now = new Date()
+            let timeToday = now.getHours() * 60 * 60 * 1000
+            timeToday += now.getMinutes() * 60 * 1000
+            let hours = `${date.getHours()}:${date.getMinutes()}`
+            let month = `${date.getMonth()+1}. ${date.getDate()}. ${hours}`
+            switch(true) {
+                // message today
+                case date.getTime() > (now.getTime() - timeToday):
+                    return hours
+                case date.getFullYear() == now.getFullYear():
+                    return month
+                default:
+                    return `${date.getFullYear()}. ${month}`
+            }
         }
     },
     mounted() {

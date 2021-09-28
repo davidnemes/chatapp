@@ -29,29 +29,29 @@ export default {
             messageToSend: "",
             webSocket: null,
             cssRoot: null,
-            currentMessages: [
-                { userId: 1, text: "Szia, hogy vagy?", self: true},
-                { userId: 2, text: "Szia, jól!", self: false},
-                { userId: 2, text: "kicsit unatkozom de amugy ok", self: false},
-                { userId: 1, text: "Na, király", self: true},
-                { userId: 1, text: "Tenisz ma 6?", self: true},
-                { userId: 2, text: "K", self: false},
-                { userId: 1, text: "Zsir", self: true},
-            ],
+            currentMessages: [],
         }
     },
     methods: {
-        async getMessage() {
-            let res = await this.axios("/api/message")
-            if(res.data) {
-                this.message = res.data
-                return
-            }
-            this.message = res.message ? res.message : res
-        },
         logout() {
             sessionStorage.clear()
             window.location.href = "/"
+        },
+        async loadMessages() {
+            let messages = (await this.axios("/api/groupmessages/1")).data
+            let currentUserId = JSON.parse(sessionStorage.getItem("user")).userId
+
+            let handledArr = messages.map(msgobj => {
+                let msg = {
+                    userId: msgobj.userId,
+                    message: msgobj.message,
+                    date: new Date(msgobj.date),
+                    // create self
+                    self: msgobj.userId == currentUserId,
+                }
+                return msg
+            });
+            this.currentMessages = handledArr
         },
         sendMessage(event) {
             event.preventDefault()
@@ -62,10 +62,39 @@ export default {
             let user = JSON.parse(sessionStorage.getItem("user"))
             this.currentMessages.push({
                 userId: user.userId,
-                text: msg,
-                self: true
+                message: msg,
+                self: true,
+                date: new Date()
             })
+        },
 
+        async connectWS() {
+            const res = await this.axios("/api/wstoken")
+            if(res.status !== 200) {
+                alert("Error at connecting WebSocket")
+                return
+            }
+
+            const webSocket = new WebSocket(`ws://${this.serverIp}:1100/?token=${res.data.token}`);
+            webSocket.onerror = (err) => {
+                if(err.eventPhase === 2) {
+                    alert("Error at connecting ws. Maybe the LanIP was set poorly.")
+                } else {
+                    alert("Error at connecting ws.")
+                }
+            }
+            webSocket.onopen = () => {
+                console.log("ws opened");
+            }
+            webSocket.onmessage = (event) => {
+                try {
+                    let parsedMsg = JSON.parse(event.data)
+                    console.log(parsedMsg);
+                } catch (error) {
+                    console.log(event.data);
+                }
+            }
+            this.webSocket = webSocket
         },
 
         // Functions with CSS variables
@@ -89,7 +118,7 @@ export default {
             this.setCssVarValue("--appMT", 0)
         }
     },
-    created() {
+    async created() {
         // Check if user is logged in
         if(!sessionStorage.getItem("x-access-token")) {
             this.$router.push("/login")
@@ -97,26 +126,12 @@ export default {
 
         // Set cssRoot and height
         this.setCSSandHeights()
+
+        // Load Messages
+        await this.loadMessages()
     },
     async mounted() {
-        const res = await this.axios("/api/wstoken")
-        if(res.status !== 200) {
-            alert("Error at connecting WebSocket")
-            return
-        }
-        const webSocket = new WebSocket(`ws://${this.serverIp}:1100/?token=${res.data.token}`);
-        webSocket.onopen = () => {
-            console.log("ws opened");
-        }
-        webSocket.onmessage = (event) => {
-            try {
-                let parsedMsg = JSON.parse(event.data)
-                console.log(parsedMsg);
-            } catch (error) {
-                console.log(event.data);
-            }
-        }
-        this.webSocket = webSocket
+        await this.connectWS()
     }
 }
 </script>
