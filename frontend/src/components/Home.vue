@@ -30,6 +30,10 @@ export default {
             webSocket: null,
             cssRoot: null,
             currentMessages: [],
+            currentChat: {
+                type: "group",
+                id: 1
+            }
         }
     },
     methods: {
@@ -58,8 +62,20 @@ export default {
             this.webSocket.send(JSON.stringify({ message: this.messageToSend }))
         },
 
-        msgPosted(msg) {
+        async msgPosted(msg) {
             let user = JSON.parse(sessionStorage.getItem("user"))
+            let toServer = {
+                type: "new_message",
+                to: "group",
+
+                message: msg,
+                userId: user.userId,
+                date: new Date(),
+                groupId: this.currentChat.id,
+            }
+
+            this.webSocket.send(JSON.stringify(toServer))
+            // push local
             this.currentMessages.push({
                 userId: user.userId,
                 message: msg,
@@ -87,10 +103,22 @@ export default {
                 console.log("ws opened");
             }
             webSocket.onmessage = (event) => {
-                try {
-                    let parsedMsg = JSON.parse(event.data)
-                    console.log(parsedMsg);
-                } catch (error) {
+                if (this.isJson(event.data)) {
+                    let msg = JSON.parse(event.data)
+                    let currentUserId = JSON.parse(sessionStorage.getItem("user")).userId
+                    if (this.currentChat.type == msg.to && this.currentChat.id == msg.groupId) {
+                        this.currentMessages.push({
+                            userId: msg.userId,
+                            message: msg.message,
+                            date: new Date(msg.date),
+                            // create self
+                            self: msg.userId == currentUserId,
+                        })
+                    } else {
+                        // received message not for this chatroom
+                    }
+                } else {
+                    console.log("got unparseable string: ");
                     console.log(event.data);
                 }
             }
@@ -116,6 +144,16 @@ export default {
             this.setCssVarValue("--innerHeight", window.innerHeight)
             this.setCssVarValue("--chatRoomHeight", window.innerHeight - 140)
             this.setCssVarValue("--appMT", 0)
+        },
+
+        // Helpers
+        isJson(data) {
+            try {
+                JSON.parse(data)
+                return true
+            } catch (err) {
+                return false
+            }
         }
     },
     async created() {

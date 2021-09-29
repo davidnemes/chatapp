@@ -2,7 +2,6 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-const authJwt = require('./middlewares/authJwt')
 
 var usersRouter = require('./routes/users.routes');
 var wsRouter = require('./routes/ws.routes');

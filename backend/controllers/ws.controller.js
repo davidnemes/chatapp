@@ -1,4 +1,6 @@
-const { WsToken } = require("../db/models")
+const { WsToken, GroupMessage } = require("../db/models")
+
+// MAIN CONTROLLER
 
 const wsController = async (ws, wss, req) => {
 
@@ -24,45 +26,28 @@ const wsController = async (ws, wss, req) => {
     console.log('A new client Connected!');
     ws.send('Welcome New Client!');
 
-    ws.on("message", (message) => {
-        let stringMsg = message.toString()
-        let parsedMsg
-        try {
-            parsedMsg = JSON.parse(stringMsg)
-            console.log('received: ', parsedMsg);
-        } catch (err) {
-            console.log('received (string) : ' + stringMsg);
-        }
-        wss.clients.forEach(client => {
-            if (client !== ws /* && client.readyState === WebSocket.OPEN */) {
-                if(parsedMsg) {
-                    client.send(JSON.stringify(parsedMsg))
-                } else {
-                    client.send(stringMsg)
-                }    
+    ws.on("message", (data) => {
+        let msgString = data.toString()
+
+        if(isJson(msgString)) {
+            let msg = JSON.parse(msgString)
+            switch(msg.type) {
+                case "new_message":
+                    newMessage(msg, ws, wss)
+                break;
+                default:
+                    console.log("Exception was found:");
+                    console.log(msg);
             }
-        })
+        } else {
+            console.log("got a string message from a connection: ");
+            console.log(msg);
+        }
     })
 }
 
 // CONNECTING
 
-function genToken() {
-    var length = 6,
-        charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-        retVal = "";
-    for (var i = 0, n = charset.length; i < length; ++i) {
-        retVal += charset.charAt(Math.floor(Math.random() * n));
-    }
-    return retVal;
-}
-const checkToken = async (token) => {
-    if (token.expiration < Date.now()) {
-        await WsToken.destroy({ where: {
-            id: token.id
-        }})
-    }
-}
 const wsCreateToken = async (req, res) => {
     const expirationTime = Date.now() + 10 * 1000
     const token = genToken()
@@ -89,6 +74,63 @@ const wsCreateToken = async (req, res) => {
     }
 }
 
+// CONTROLLER FUNCTIONS
+
+const newMessage = async (msg, ws, wss) => {
+    switch(msg.to) {
+        case "group":
+            try {
+                await GroupMessage.create({
+                    message: msg.message,
+                    userId: msg.userId,
+                    groupId: msg.groupId,
+                    date: msg.date
+                })
+                wss.clients.forEach(client => {
+                    // 1 is basically WebSocket.OPEN
+                    if (client !== ws && client.readyState === 1) {
+                        client.send(JSON.stringify(msg))
+                    }
+                })
+            } catch (err) {
+                console.log("Server Error At WS");
+            }
+        break;
+        case "private":
+            // private msg controller
+        break;
+        default:
+            console.log("An Exception was found: ");
+            console.log(msg);
+    }
+}
+
+// HELPERS
+
+function genToken() {
+    var length = 6,
+        charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        retVal = "";
+    for (var i = 0, n = charset.length; i < length; ++i) {
+        retVal += charset.charAt(Math.floor(Math.random() * n));
+    }
+    return retVal;
+}
+const checkToken = async (token) => {
+    if (token.expiration < Date.now()) {
+        await WsToken.destroy({ where: {
+            id: token.id
+        }})
+    }
+}
+const isJson = (data) => {
+    try {
+        JSON.parse(data)
+        return true
+    } catch (err) {
+        return false
+    }
+}
 
 module.exports = {
     wsController,
