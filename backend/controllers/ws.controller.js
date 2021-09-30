@@ -1,4 +1,5 @@
 const { WsToken, GroupMessage } = require("../db/models")
+const sanitizeHTML = require("sanitize-html")
 
 // MAIN CONTROLLER
 
@@ -77,6 +78,12 @@ const wsCreateToken = async (req, res) => {
 // CONTROLLER FUNCTIONS
 
 const newMessage = async (msg, ws, wss) => {
+    let cleanMsg = sanitizeHTML(msg.message)
+    msg.message = cleanMsg
+    if (cleanMsg == "") {
+        console.log("WARNING: Someone wrote html-dirty message");
+        return false
+    }
     switch(msg.to) {
         case "group":
             try {
