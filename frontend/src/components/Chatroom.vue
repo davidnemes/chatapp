@@ -71,8 +71,9 @@
                     class="media media-chat"
                     :class="msgGroup.self ? 'media-chat-reverse': ''"
                     >
-                    <img v-if="!msgGroup.self" class="avatar" :src="msgGroup.imgSrc" alt="...">
+                    <img v-if="!msgGroup.self" class="avatar" :src="msgGroup.imgSrc" alt="..." onerror="this.src='/images/profpic-default.jpg'">
                     <div class="media-body">
+                        <p v-if="!msgGroup.self" class="meta">{{ msgGroup.un }}</p>
                         <p v-for="msg, index in msgGroup.msgs" :key="index"> {{ msg }}</p>
                         <p class="meta">{{ msgGroup.ttw }}</p>
                     </div>
@@ -115,7 +116,8 @@ export default {
                 // defaults
                 self: false,
                 msgs: [],
-                ttw: "", // short for timeToWrite
+                ttw: "", // -> timeToWrite
+                un: "", // -> username
             }
             let previousId = null
             let previousDate = null
@@ -133,6 +135,7 @@ export default {
                         msgGroup.imgSrc = `/images/profpic-userId-${msg.userId}.jpg`
                         msgGroup.msgs.push(msg.message)
                         msgGroup.ttw = this.timeToWrite(msg.date)
+                        msgGroup.un = msg.username
                     } else {
                         msgGroup.msgs.push(msg.message)
                         msgGroup.ttw = this.timeToWrite(msg.date)
@@ -146,6 +149,7 @@ export default {
                     msgGroup.imgSrc = `/images/profpic-userId-${msg.userId}.jpg`
                     msgGroup.msgs.push(msg.message)
                     msgGroup.ttw = this.timeToWrite(msg.date)
+                    msgGroup.un = msg.username
                 }
 
                 previousDate = msg.date
@@ -171,8 +175,10 @@ export default {
             this.scrollDown()
         },
         scrollDown() {
-            let scroll = this.jQuery("#chat-content").prop("scrollHeight")
-            this.jQuery("#chat-content")[0].scrollTop = scroll
+            setTimeout(() => {
+                let scroll = this.jQuery("#chat-content").prop("scrollHeight")
+                this.jQuery("#chat-content")[0].scrollTop = scroll
+            }, 75)
         },
         timeToWrite(date) {
             let now = new Date()

@@ -3,15 +3,15 @@
         <div id="navigationDiv">
             <h1>
                 Home
-                <button class="btn btn-warning close" @click="logout">Logout</button>
             </h1>
-            <form class="container">
-                <input type="text" name="message" id="msgInput" v-model="messageToSend" class="form-control mb-3">
-                <button @click="sendMessage" class="btn btn-primary">Send message</button>
-            </form>
+            <button class="btn btn-warning p-2" @click="logout">Logout</button>
+            <div @click="toProfile" id="profileDiv">
+                <img :src="`/images/profpic-userId-${user.userId}.jpg`" alt="..." class="avatar" onerror="this.src='/images/profpic-default.jpg'">
+                <p>{{ user.username }}</p>
+            </div>
         </div>
         <div id="chatroomDiv">
-            <Chatroom :messages="currentMessages" @postMsg="msgPosted"/>
+            <Chatroom :messages="currentMessages" @postMsg="msgPosted" ref="chatroom" />
         </div>
     </div>
 </template>
@@ -36,6 +36,14 @@ export default {
             }
         }
     },
+    computed: {
+        user() {
+            return JSON.parse(sessionStorage.getItem("user"))
+        },
+        profpicSrc() {
+            return `/images/profpic-userId-${this.user.userId}.jpg`
+        },
+    },
     methods: {
         logout() {
             sessionStorage.clear()
@@ -52,14 +60,12 @@ export default {
                     date: new Date(msgobj.date),
                     // create self
                     self: msgobj.userId == currentUserId,
+                    username: msgobj.User.username
                 }
                 return msg
             });
             this.currentMessages = handledArr
-        },
-        sendMessage(event) {
-            event.preventDefault()
-            this.webSocket.send(JSON.stringify({ message: this.messageToSend }))
+            this.$refs.chatroom.scrollDown()
         },
 
         async msgPosted(msg) {
@@ -103,26 +109,31 @@ export default {
                 console.log("ws opened");
             }
             webSocket.onmessage = (event) => {
-                if (this.isJson(event.data)) {
-                    let msg = JSON.parse(event.data)
-                    let currentUserId = JSON.parse(sessionStorage.getItem("user")).userId
-                    if (this.currentChat.type == msg.to && this.currentChat.id == msg.groupId) {
-                        this.currentMessages.push({
-                            userId: msg.userId,
-                            message: msg.message,
-                            date: new Date(msg.date),
-                            // create self
-                            self: msg.userId == currentUserId,
-                        })
-                    } else {
-                        // received message not for this chatroom
-                    }
-                } else {
-                    console.log("got unparseable string: ");
-                    console.log(event.data);
-                }
+                this.wsOnMessage(event)
             }
             this.webSocket = webSocket
+        },
+
+        wsOnMessage(event) {
+            if (this.isJson(event.data)) {
+                let msg = JSON.parse(event.data)
+                let currentUserId = JSON.parse(sessionStorage.getItem("user")).userId
+                if (this.currentChat.type == msg.to && this.currentChat.id == msg.groupId) {
+                    this.currentMessages.push({
+                        userId: msg.userId,
+                        message: msg.message,
+                        date: new Date(msg.date),
+                        // create self
+                        self: msg.userId == currentUserId,
+                    })
+                    this.$refs.chatroom.scrollDown()
+                } else {
+                    // received message not for this chatroom
+                }
+            } else {
+                console.log("got unparseable string: ");
+                console.log(event.data);
+            }
         },
 
         // Functions with CSS variables
@@ -189,5 +200,19 @@ export default {
 #chatroomDiv {
     width: 67%;
     height: var(--innerHeight);
+}
+#profileDiv {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    
+}
+@media screen and (max-width: 500px) {
+    #navigationDiv {
+        display: none;
+    }
+    #chatroomDiv {
+        width: 100%;
+    }
 }
 </style>

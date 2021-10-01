@@ -43,12 +43,14 @@ const login = async (req, res) => {
         accessToken: token,
         user: {
             userId: user.id,
-            role: user.Role
+            role: user.Role,
+            username: user.username
         }
     })
 }
 
 const signup = async (req, res) => {
+    // validation
     let un = req.body.username
     let pw = req.body.password
     if (!un || un.length < 3 || !pw || pw.length < 3) {
@@ -61,7 +63,8 @@ const signup = async (req, res) => {
     if(otherUser) {
         return res.status(400).json({ message: "Already reserved username" })
     }
-    
+
+    // signing up
     let user
     let encPw = await bcrypt.hash(pw, 10)
     try {
@@ -71,9 +74,11 @@ const signup = async (req, res) => {
             roleId: 1,
         })
     } catch (err) {
+        console.log(err);
         return res.status(500).json({ message: "Server error" })
     }
 
+    // respondind
     let userToSend = await User.findOne({
         where: {
             username: user.username
@@ -93,7 +98,8 @@ const signup = async (req, res) => {
         accessToken: token,
         user: {
             userId: userToSend.id,
-            role: userToSend.Role
+            role: userToSend.Role,
+            username: user.username
         }
     })
 }

@@ -4,7 +4,12 @@ const findAll = async (req, res) => {
     const id = req.params.groupId
     try {
         let messages = await GroupMessage.findAll({
-            where: { groupId: id }
+            where: { groupId: id },
+            include: {
+                model: User,
+                attributes: ["username", "id"],
+                as: "User"
+            }
         })
         return res.status(200).json(messages)
     } catch (err) {
