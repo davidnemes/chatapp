@@ -3,13 +3,14 @@
 ## Project setup
 ```
 npm install
-cd db
-npx sequelize-cli db:migrate
-npx sequelize-cli db:seed:all
+npm run db_setup
+npm run frontend_install
 ```
-### You also have to set `.env`!
+### You should also set `.env`, although it works without it
 #### --> `PORT`
 #### --> `NODE_ENV`     ("development" || "production")
+#### --> `TOKEN_SECRET`
+#### --> `TOKEN_EXPIRATION`
 
 
 ### Auto-restart for development

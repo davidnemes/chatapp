@@ -3,8 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
-    "dev": "nodemon ./bin/www"
+    "db_setup": "cd db && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all",
+    "frontend_build": "cd ../frontend && npm run build",
+    "frontend_install": "cd ../frontend && npm install",
+    "dev": "npm run frontend_build && nodemon ./bin/www",
+    "prod": "npm run frontend_build && node ./bin/www"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",

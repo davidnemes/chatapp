@@ -80,7 +80,7 @@
                 </div>
             </div>
             <div v-else>
-                <Loading class=""></Loading>
+                <p class="alert alert-warning m-2 w-100">Loading...</p>
             </div>
             <!-- <div class="ps-scrollbar-x-rail" style="left: 0px; bottom: 0px;">
                 <div class="ps-scrollbar-x" tabindex="0" style="left: 0px; width: 0px;"></div>
@@ -111,6 +111,9 @@ export default {
     },
     computed: {
         renderMsgs() {
+            if (typeof this.messages !== "object") {
+                return []
+            }
             let newMsgs = []
             let msgGroup = {
                 // defaults

@@ -26,10 +26,9 @@ export default {
     },
     data() {
         return {
-            messageToSend: "",
             webSocket: null,
             cssRoot: null,
-            currentMessages: [],
+            currentMessages: "",
             currentChat: {
                 type: "group",
                 id: 1
@@ -51,7 +50,6 @@ export default {
         },
         async loadMessages() {
             let messages = (await this.axios("/api/groupmessages/1")).data
-            let currentUserId = JSON.parse(sessionStorage.getItem("user")).userId
 
             let handledArr = messages.map(msgobj => {
                 let msg = {
@@ -59,7 +57,7 @@ export default {
                     message: msgobj.message,
                     date: new Date(msgobj.date),
                     // create self
-                    self: msgobj.userId == currentUserId,
+                    self: msgobj.userId == this.user.userId,
                     username: msgobj.User.username
                 }
                 return msg
@@ -69,13 +67,13 @@ export default {
         },
 
         async msgPosted(msg) {
-            let user = JSON.parse(sessionStorage.getItem("user"))
             let toServer = {
                 type: "new_message",
                 to: "group",
 
                 message: msg,
-                userId: user.userId,
+                userId: this.user.userId,
+                username: this.user.username,
                 date: new Date(),
                 groupId: this.currentChat.id,
             }
@@ -83,7 +81,8 @@ export default {
             this.webSocket.send(JSON.stringify(toServer))
             // push local
             this.currentMessages.push({
-                userId: user.userId,
+                userId: this.user.userId,
+                username: this.user.username,
                 message: msg,
                 self: true,
                 date: new Date()
@@ -117,14 +116,14 @@ export default {
         wsOnMessage(event) {
             if (this.isJson(event.data)) {
                 let msg = JSON.parse(event.data)
-                let currentUserId = JSON.parse(sessionStorage.getItem("user")).userId
                 if (this.currentChat.type == msg.to && this.currentChat.id == msg.groupId) {
                     this.currentMessages.push({
                         userId: msg.userId,
+                        username: this.user.username,
                         message: msg.message,
                         date: new Date(msg.date),
                         // create self
-                        self: msg.userId == currentUserId,
+                        self: msg.userId == this.user.userId,
                     })
                     this.$refs.chatroom.scrollDown()
                 } else {

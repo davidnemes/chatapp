@@ -1,14 +1,12 @@
 # Frontend
 
 ## Project setup
-```
-npm install
-```
-### You also have to set `env.config.js`!
+### You have to set `env.config.js`!
 #### --> `serverLanIp`
+### The rest is done from backend
 
 
-### Compiles and hot-reloads for development
+### Auto-compiles for development
 ```
 npm run serve
 ```
@@ -18,10 +16,10 @@ npm run serve
 npm run build
 ```
 
-### Lints and fixes files
+#### Lints and fixes files
 ```
 npm run lint
 ```
 
-### Customize configuration
+#### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
