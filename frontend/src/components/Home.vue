@@ -11,7 +11,7 @@
             </div>
         </div>
         <div id="chatroomDiv">
-            <Chatroom :messages="currentMessages" @postMsg="msgPosted" ref="chatroom" />
+            <Chatroom :msgObj="currentMessages" @postMsg="msgPosted" ref="chatroom" />
         </div>
     </div>
 </template>
@@ -28,7 +28,10 @@ export default {
         return {
             webSocket: null,
             cssRoot: null,
-            currentMessages: "",
+            // an error occured when i did it like --> currentMessages = []
+            currentMessages: {
+                messages: []
+            },
             currentChat: {
                 type: "group",
                 id: 1
@@ -62,7 +65,7 @@ export default {
                 }
                 return msg
             });
-            this.currentMessages = handledArr
+            this.currentMessages.messages = handledArr
             this.$refs.chatroom.scrollDown()
         },
 
@@ -80,7 +83,7 @@ export default {
 
             this.webSocket.send(JSON.stringify(toServer))
             // push local
-            this.currentMessages.push({
+            this.currentMessages.messages.push({
                 userId: this.user.userId,
                 username: this.user.username,
                 message: msg,
@@ -117,9 +120,9 @@ export default {
             if (this.isJson(event.data)) {
                 let msg = JSON.parse(event.data)
                 if (this.currentChat.type == msg.to && this.currentChat.id == msg.groupId) {
-                    this.currentMessages.push({
+                    this.currentMessages.messages.push({
                         userId: msg.userId,
-                        username: this.user.username,
+                        username: msg.username,
                         message: msg.message,
                         date: new Date(msg.date),
                         // create self

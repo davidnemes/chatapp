@@ -65,7 +65,7 @@
                     <p>Okay then see you on sunday!!</p>
                 </div>
             </div> -->
-            <div v-if="messages.length > 0">
+            <div v-if="msgObj.messages.length > 0">
                 <div v-for="msgGroup, index in renderMsgs" 
                     :key="index" 
                     class="media media-chat"
@@ -102,7 +102,7 @@
 export default {
     name: "Chatroom",
     props: {
-        messages: Array,
+        msgObj: Object,
     },
     data() {
         return {
@@ -111,7 +111,9 @@ export default {
     },
     computed: {
         renderMsgs() {
-            if (typeof this.messages !== "object") {
+            let msgs = this.msgObj.messages
+            if (typeof msgs !== "object") {
+                console.log("not object");
                 return []
             }
             let newMsgs = []
@@ -125,7 +127,7 @@ export default {
             let previousId = null
             let previousDate = null
 
-            this.messages.forEach(msg => {
+            msgs.forEach(msg => {
                 if (msg.userId == previousId) {
                     // new group if prev msg is older than 3 mins
                     let diff = msg.date.getTime() - previousDate.getTime()
