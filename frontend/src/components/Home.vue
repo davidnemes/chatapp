@@ -40,20 +40,22 @@ export default {
     },
     computed: {
         user() {
-            return JSON.parse(sessionStorage.getItem("user"))
-        },
-        profpicSrc() {
-            return `/images/profpic-userId-${this.user.userId}.jpg`
-        },
+            if (sessionStorage.getItem("user")) {
+                return JSON.parse(sessionStorage.getItem("user"))
+            } else {
+                return { userId: 0, username: "default", role: { role: "user", weight: 10 }}
+            }
+        }
     },
     methods: {
         logout() {
             sessionStorage.clear()
+            localStorage.clear()
             window.location.href = "/"
         },
         async loadMessages() {
             let messages = (await this.axios("/api/groupmessages/1")).data
-
+            if(!messages) { return false }
             let handledArr = messages.map(msgobj => {
                 let msg = {
                     userId: msgobj.userId,
@@ -93,7 +95,7 @@ export default {
         },
 
         async connectWS() {
-            const res = await this.axios("/api/wstoken")
+            const res = await this.axios("/api/token/ws")
             if(res.status !== 200) {
                 alert("Error at connecting WebSocket")
                 return
@@ -102,9 +104,10 @@ export default {
             const webSocket = new WebSocket(`ws://${this.serverIp}:1100/?token=${res.data.token}`);
             webSocket.onerror = (err) => {
                 if(err.eventPhase === 2) {
-                    alert("Error at connecting ws. Maybe the LanIP was set poorly.")
-                } else {
+                    // Maybe the LanIP was set poorly.
                     alert("Error at connecting ws.")
+                } else {
+                    alert("Error at ws.")
                 }
             }
             webSocket.onopen = () => {
@@ -171,18 +174,42 @@ export default {
     },
     async created() {
         // Check if user is logged in
-        if(!sessionStorage.getItem("x-access-token")) {
-            this.$router.push("/login")
+        let sstoken = sessionStorage.getItem("x-access-token")
+        if(!sstoken) {
+            let lsuser = localStorage.getItem("user")
+            if(lsuser) {
+                // user hit remember me
+                let user = JSON.parse(localStorage.getItem("user"))
+                let data = {
+                    reason: "remember_me",
+                    user,
+                    token: localStorage.getItem("x-remember-token").replaceAll('"', '')
+                }
+                let res = await this.axios("/api/token/accesstoken", "post", data)
+                let token = JSON.parse(res.data).accessToken
+                
+                if(!token) {
+                    this.logout()
+                }
+
+                sessionStorage.setItem("x-access-token", token)
+                sessionStorage.setItem("user", JSON.stringify(user))
+                console.log("set user");
+            } else {
+                // the flow never should get here btw
+                this.$router.push("/login")
+            }
         }
 
         // Set cssRoot and height
         this.setCSSandHeights()
 
         // Load Messages
+        console.log("load msgs");
         await this.loadMessages()
+        await this.connectWS()
     },
     async mounted() {
-        await this.connectWS()
     }
 }
 </script>

@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-const controller = require('../controllers/ws.controller');
+const controller = require('../controllers/tokens.controller');
 const authJwt = require('../middlewares/authJwt')
 
 
@@ -12,7 +12,8 @@ router.use((req, res, next) => {
     next();
 });
 
-router.get('/', [authJwt.verifyToken], controller.wsCreateToken)
+router.get('/ws', [authJwt.verifyToken], controller.wsCreateToken)
+router.post('/accesstoken', controller.newAccessToken)
 
 
 module.exports = router;

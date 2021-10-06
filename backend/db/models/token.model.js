@@ -2,8 +2,11 @@
 const {
   Model
 } = require('sequelize');
+
+// this is a model for creating custom tokens
+
 module.exports = (sequelize, DataTypes) => {
-  class WsToken extends Model {
+  class Token extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -13,13 +16,13 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   };
-  WsToken.init({
+  Token.init({
     token: DataTypes.STRING,
     expiration: DataTypes.INTEGER
   }, {
     sequelize,
-    modelName: 'WsToken',
+    modelName: 'Token',
     timestamps: false
   });
-  return WsToken;
+  return Token;
 };

@@ -24,6 +24,10 @@
                         <div class="invalid-feedback">A mező kitöltése kötelező! (min 3 karakter)</div>
                     </label>
                 </div>
+                <div class="form-group">
+                    <input type="checkbox" id="switch1" v-model="rememberMe">
+                    <label for="switch1">Jegyezz meg</label>
+                </div>
                 <button type="submit" class="btn btn-primary mb-2" @click="login">Belépek</button><br>
                 <button type="submit" class="btn" @click="signup">Regisztrálok</button>
                 <div v-if="loginErrMsg" class="form-group">
@@ -42,6 +46,7 @@ export default {
         return {
             username: "",
             password: "",
+            rememberMe: false,
             unClass: "",
             pwClass: "",
             loginErrMsg: "",
@@ -72,7 +77,8 @@ export default {
 
             let data = {
                 username: this.username,
-                password: this.password
+                password: this.password,
+                rememberMe: this.rememberMe,
             }
             let res = await this.axios("/api/users/login", "post", data)
             if (res.status == 200 && res.statusText == "OK") {
@@ -111,7 +117,8 @@ export default {
 
             let data = {
                 username: this.username,
-                password: this.password
+                password: this.password,
+                rememberMe: this.rememberMe,
             }
             let res = await this.axios("/api/users/signup", "post", data)
             if (res.status == 200 && res.statusText == "OK") {
@@ -131,6 +138,13 @@ export default {
         handleSuccess(res) {
             sessionStorage.setItem("x-access-token", res.data.accessToken)
             sessionStorage.setItem("user", JSON.stringify(res.data.user))
+            if(this.rememberMe) {
+                localStorage.setItem("user", JSON.stringify(res.data.user))
+                if(res.data.rememberToken) {
+                    // the replaceAll method is just a bug fix
+                    localStorage.setItem("x-remember-token", JSON.stringify(res.data.rememberToken).replaceAll('"', ''))
+                }
+            }
             this.$router.push("/home")
         },
 
@@ -150,7 +164,13 @@ export default {
         }
     },
     created() {
-        if(sessionStorage.getItem("x-access-token")) {
+        let sstoken = sessionStorage.getItem("x-access-token")
+        let lsuser = localStorage.getItem("user")
+        if(lsuser || sstoken) {
+            // redirect to Home.vue
+            if(lsuser && !sessionStorage.getItem("user")) {
+                sessionStorage.setItem("user", lsuser)
+            }
             this.$router.push("/home")
         }
 

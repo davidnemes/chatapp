@@ -1,5 +1,7 @@
-const { WsToken, GroupMessage } = require("../db/models")
 const sanitizeHTML = require("sanitize-html")
+
+const { GroupMessage, Token } = require("../db/models")
+const { isJson } = require("./tools")
 
 // MAIN CONTROLLER
 
@@ -12,7 +14,7 @@ const wsController = async (ws, wss, req) => {
         ws.send("Unauthorized")
         return ws.terminate()
     }
-    let tokenFromDB = await WsToken.findOne({ where: {
+    let tokenFromDB = await Token.findOne({ where: {
         token: token
     }})
     if (!tokenFromDB) {
@@ -45,34 +47,6 @@ const wsController = async (ws, wss, req) => {
             console.log(msg);
         }
     })
-}
-
-// CONNECTING
-
-const wsCreateToken = async (req, res) => {
-    const expirationTime = Date.now() + 10 * 1000
-    const token = genToken()
-    try {
-        await WsToken.create({
-            expiration: expirationTime,
-            token
-        })
-        res.status(200).json({ token: token })
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ message: "Server Error"})
-    }
-
-    // destroy old tokens
-    try {
-        let tokens = await WsToken.findAll()
-        for (let i=0; i<tokens.length; i++) {
-            await checkToken(tokens[i])
-        }
-    } catch (error) {
-        console.log("Error: error at deleting old ws tokens");
-        console.log(error);
-    }
 }
 
 // CONTROLLER FUNCTIONS
@@ -112,34 +86,9 @@ const newMessage = async (msg, ws, wss) => {
     }
 }
 
-// HELPERS
+// CONNECTING
 
-function genToken() {
-    var length = 6,
-        charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-        retVal = "";
-    for (var i = 0, n = charset.length; i < length; ++i) {
-        retVal += charset.charAt(Math.floor(Math.random() * n));
-    }
-    return retVal;
-}
-const checkToken = async (token) => {
-    if (token.expiration < Date.now()) {
-        await WsToken.destroy({ where: {
-            id: token.id
-        }})
-    }
-}
-const isJson = (data) => {
-    try {
-        JSON.parse(data)
-        return true
-    } catch (err) {
-        return false
-    }
-}
 
 module.exports = {
-    wsController,
-    wsCreateToken
+    wsController
 }

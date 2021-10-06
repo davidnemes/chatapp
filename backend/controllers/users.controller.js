@@ -2,9 +2,12 @@ const config = require("../config/auth.config");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
-const { User, Role } = require("../db/models");
+const { User, Role, Token } = require("../db/models");
+const { genToken } = require("./tools")
 
 const login = async (req, res) => {
+
+    // validating
     if (!req.body.username || !req.body.password) {
         return res.status(400).json({ message: "Empty Credentials" })
     }
@@ -35,17 +38,30 @@ const login = async (req, res) => {
         return res.status(400).json({ message: "Invalid Credentials" })
     }
 
+    // Remember Me
+
+    let rmToken = genToken()
+    if (req.body.rememberMe) {
+        await Token.create({
+            token: rmToken,
+            expiration: Date.now() + (30*24*60*60*1000)
+        })
+    }
+
+    
+    // responding
+    
     const token = jwt.sign({ id: user.id }, config.secret, {
         expiresIn: config.jwtExpiration
     });
-
     return res.status(200).json({
         accessToken: token,
         user: {
             userId: user.id,
             role: user.Role,
             username: user.username
-        }
+        },
+        rememberToken: rmToken
     })
 }
 
@@ -78,7 +94,15 @@ const signup = async (req, res) => {
         return res.status(500).json({ message: "Server error" })
     }
 
-    // respondind
+    let rmToken = genToken()
+    if (req.body.rememberMe) {
+        await Token.create({
+            token: rmToken,
+            expiration: Date.now() + (30*24*60*60*1000)
+        })
+    }
+    
+    // responding
     let userToSend = await User.findOne({
         where: {
             username: user.username
@@ -100,7 +124,8 @@ const signup = async (req, res) => {
             userId: userToSend.id,
             role: userToSend.Role,
             username: user.username
-        }
+        },
+        rememberToken: rmToken
     })
 }
 

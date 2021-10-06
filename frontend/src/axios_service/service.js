@@ -16,8 +16,13 @@ const axiosService = async (url, method, data) => {
         error = err
     })
     if(error) {
+        console.log("----");
+        console.log("From Axios service:");
+        console.log(error.status);
+        console.log("----");
         if(error.message == "Request failed with status code 401") {
             sessionStorage.clear("x-access-token")
+            localStorage.clear("user")
             window.location.href = "/"
         }
         return {
