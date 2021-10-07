@@ -1,5 +1,11 @@
 'use strict';
 
+/* *
+ * To get external IP
+ * http://ipv4bot.whatismyipaddress.com/
+ * 
+ */
+
 const { networkInterfaces } = require('os');
 
 const nets = networkInterfaces();
@@ -19,12 +25,28 @@ for (const name of Object.keys(nets)) {
 
 let IP = ""
 let keys = Object.keys(results)
+let found = false
 keys.forEach(key => {
     let arr = results[key][0].split(".")
     let firstHalf = arr[0] + arr[1]
     if (firstHalf === "192168") {
+        found = true
         IP = results[key][0]
     }
 })
-
+if(!found) {
+    keys.forEach(key => {
+        let firstTwo = key.slice(0, 2)
+        let possible = ["wl", "en", "et"]
+        if(possible.includes(firstTwo)) {
+            console.log("IP from keyname");
+            found = true
+            IP = results[key][0]
+        }
+    });
+}
+if (!found) {
+    console.log("Couldn't find internal IP");
+    IP = "localhost"
+}
 module.exports = IP

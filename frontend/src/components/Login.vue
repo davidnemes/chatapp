@@ -26,7 +26,7 @@
                 </div>
                 <div class="form-group">
                     <input type="checkbox" id="switch1" v-model="rememberMe">
-                    <label for="switch1">Jegyezz meg</label>
+                    <label for="switch1" class="ml-2">Jegyezz meg</label>
                 </div>
                 <button type="submit" class="btn btn-primary mb-2" @click="login">Belépek</button><br>
                 <button type="submit" class="btn" @click="signup">Regisztrálok</button>

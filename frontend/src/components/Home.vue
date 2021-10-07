@@ -101,7 +101,7 @@ export default {
                 return
             }
 
-            const webSocket = new WebSocket(`ws://${this.serverIp}:1100/?token=${res.data.token}`);
+            const webSocket = new WebSocket(`ws://${location.host}/?token=${res.data.token}`);
             webSocket.onerror = (err) => {
                 if(err.eventPhase === 2) {
                     // Maybe the LanIP was set poorly.
@@ -205,7 +205,6 @@ export default {
         this.setCSSandHeights()
 
         // Load Messages
-        console.log("load msgs");
         await this.loadMessages()
         await this.connectWS()
     },

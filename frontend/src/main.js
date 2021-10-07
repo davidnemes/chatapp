@@ -7,8 +7,6 @@ import $ from 'jquery/dist/jquery.min.js'
 Vue.prototype.jQuery = $
 import axiosService from './axios_service/service'
 Vue.prototype.axios = axiosService
-import env from "../env.config"
-Vue.prototype.serverIp = env.serverLanIp
 
 import 'jquery/src/jquery'
 import 'bootstrap/dist/js/bootstrap.min.js'

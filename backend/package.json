@@ -7,6 +7,7 @@
     "frontend_build": "cd ../frontend && npm run build",
     "frontend_install": "cd ../frontend && npm install",
     "dev": "npm run frontend_build && nodemon ./bin/www",
+    "dev-b": "nodemon ./bin/www",
     "prod": "npm run frontend_build && node ./bin/www"
   },
   "dependencies": {
