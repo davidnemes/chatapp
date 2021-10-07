@@ -13,6 +13,14 @@
         <div id="chatroomDiv">
             <Chatroom :msgObj="currentMessages" @postMsg="msgPosted" ref="chatroom" />
         </div>
+
+        <!-- Elements with changing place -->
+        <div class="tokenExpireAlert alert alert-warning alert-dismissible fade show">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <strong>Bejelentkezés meghosszabítása</strong><br>
+            A bejelentkezésed kevesebb mint 5 perc múlva lejár.
+            <a @click="renewLogin" class="alert-link" style="cursor: pointer;">Meghosszabítás</a>
+        </div>
     </div>
 </template>
 
@@ -92,6 +100,16 @@ export default {
                 self: true,
                 date: new Date()
             })
+        },
+
+        accessTokenExpire() {
+            this.jQuery(".tokenExpireAlert").css("display", "block")
+            setTimeout(() => {
+                this.logout()
+            }, 5*60*1000);
+        },
+        async renewLogin() {
+            console.log("renew");
         },
 
         async connectWS() {
@@ -186,15 +204,15 @@ export default {
                     token: localStorage.getItem("x-remember-token").replaceAll('"', '')
                 }
                 let res = await this.axios("/api/token/accesstoken", "post", data)
-                let token = JSON.parse(res.data).accessToken
+                let token = res.data.accessToken
                 
                 if(!token) {
                     this.logout()
                 }
 
                 sessionStorage.setItem("x-access-token", token)
+                sessionStorage.setItem("x-acc-expiration", res.data.expiration)
                 sessionStorage.setItem("user", JSON.stringify(user))
-                console.log("set user");
             } else {
                 // the flow never should get here btw
                 this.$router.push("/login")
@@ -208,7 +226,15 @@ export default {
         await this.loadMessages()
         await this.connectWS()
     },
-    async mounted() {
+    mounted() {
+        let time = parseInt(sessionStorage.getItem("x-acc-expiration")) - Date.now() - (5*60*1000)
+        if (time < 0) {
+            this.logout()
+        }
+        setTimeout(() => {
+            console.log("need new accesstoken");
+            this.accessTokenExpire()
+        }, time)
     }
 }
 </script>
@@ -233,7 +259,12 @@ export default {
     align-items: center;
     cursor: pointer;
     display: flex;
-    
+}
+.tokenExpireAlert {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 5px;
 }
 @media screen and (max-width: 500px) {
     #navigationDiv {
@@ -241,6 +272,9 @@ export default {
     }
     #chatroomDiv {
         width: 100%;
+    }
+    .tokenExpireAlert {
+        font-size: 80%;
     }
 }
 </style>

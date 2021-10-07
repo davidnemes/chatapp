@@ -27,7 +27,7 @@ const newAccessToken = async (req, res) => {
             // rewrite expiration
 
             await Token.update({
-                expiration: Date.now() + (30*24*60*60*1000)
+                expiration: Date.now() + (10*24*60*60*1000)
             }, {
                 where: { token: token },
             })
@@ -40,8 +40,9 @@ const newAccessToken = async (req, res) => {
 
             let response = {
                 accessToken,
+                expiration: Date.now() + (config.jwtExpiration*1000),
             }
-            return res.status(200).json(JSON.stringify(response))
+            return res.status(200).json(response)
         break
         case "token_expired":
             // when 2h off

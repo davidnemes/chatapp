@@ -40,11 +40,12 @@ const login = async (req, res) => {
 
     // Remember Me
 
-    let rmToken = genToken()
+    let rmToken
     if (req.body.rememberMe) {
+        rmToken = genToken()
         await Token.create({
             token: rmToken,
-            expiration: Date.now() + (30*24*60*60*1000)
+            expiration: Date.now() + (10*24*60*60*1000)
         })
     }
 
@@ -56,6 +57,7 @@ const login = async (req, res) => {
     });
     return res.status(200).json({
         accessToken: token,
+        expiration: Date.now() + (config.jwtExpiration*1000),
         user: {
             userId: user.id,
             role: user.Role,
@@ -94,11 +96,14 @@ const signup = async (req, res) => {
         return res.status(500).json({ message: "Server error" })
     }
 
-    let rmToken = genToken()
+    // Remember Me
+
+    let rmToken
     if (req.body.rememberMe) {
+        rmToken = genToken()
         await Token.create({
             token: rmToken,
-            expiration: Date.now() + (30*24*60*60*1000)
+            expiration: Date.now() + (10*24*60*60*1000)
         })
     }
     
@@ -120,6 +125,7 @@ const signup = async (req, res) => {
 
     res.status(200).json({
         accessToken: token,
+        expiration: Date.now() + (config.jwtExpiration*1000),
         user: {
             userId: userToSend.id,
             role: userToSend.Role,

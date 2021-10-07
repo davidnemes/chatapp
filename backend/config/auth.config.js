@@ -5,5 +5,5 @@ module.exports = {
   jwtExpiration: parseInt(process.env.TOKEN_EXPIRATION) ||  1800,         // counts in seconds
 
   /* for test */
-  // jwtExpiration: 60,          // 1 minute
+  // jwtExpiration: 360,          // 1 minute
 };

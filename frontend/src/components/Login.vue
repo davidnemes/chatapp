@@ -138,6 +138,7 @@ export default {
         handleSuccess(res) {
             sessionStorage.setItem("x-access-token", res.data.accessToken)
             sessionStorage.setItem("user", JSON.stringify(res.data.user))
+            sessionStorage.setItem("x-acc-expiration", res.data.expiration)
             if(this.rememberMe) {
                 localStorage.setItem("user", JSON.stringify(res.data.user))
                 if(res.data.rememberToken) {
