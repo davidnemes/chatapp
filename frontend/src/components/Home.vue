@@ -1,14 +1,25 @@
 <template>
     <div id="outerDiv">
         <div id="navigationDiv">
-            <h1>
-                Home
-            </h1>
-            <button class="btn btn-warning p-2" @click="logout">Logout</button>
-            <div @click="toProfile" id="profileDiv">
-                <img :src="`/images/profpic-userId-${user.userId}.jpg`" alt="..." class="avatar" onerror="this.src='/images/profpic-default.jpg'">
-                <p>{{ user.username }}</p>
-            </div>
+            <header id="navigationHeader" class="m-1 p-1">
+                <div id="chappDiv">
+                    <img src="../assets/drop.png" alt="csepp" class="dropMini">
+                    <h4 class="m-0"><i>Chapp</i></h4>
+                </div>
+                <div class="dropdown">
+                    <div @click="toProfile" id="profileDiv" class="p-2" data-toggle="dropdown">
+                        <span class="mr-2">{{ user.username }}</span>
+                        <img :src="`/images/profpic-userId-${user.userId}.jpg`" alt="..." class="avatar" onerror="this.src='/images/profpic-default.jpg'">
+                    </div>
+                    <div class="dropdown-menu dropright">
+                        <h4 class="dropdown-header">{{ user.username }}</h4>
+                        <a class="dropdown-item" data-toggle="modal" data-target="#userManagement">Felhasználó kezelése</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" @click="logout">Kijelentkezés</a>
+                    </div>
+                </div>
+            </header>
+            <!-- <button class="btn btn-warning p-2" @click="logout">Logout</button> -->
         </div>
         <div id="chatroomDiv">
             <Chatroom :msgObj="currentMessages" @postMsg="msgPosted" ref="chatroom" />
@@ -21,16 +32,20 @@
             A bejelentkezésed kevesebb mint 5 perc múlva lejár.
             <a @click="renewLogin" class="alert-link" style="cursor: pointer;">Meghosszabítás</a>
         </div>
+
+        <UserManagement id="userManagement" />
     </div>
 </template>
 
 <script>
 import Chatroom from "./Chatroom.vue"
+import UserManagement from "./UserManagement.vue"
 
 export default {
     name: "Home",
     components: {
         Chatroom,
+        UserManagement,
     },
     data() {
         return {
@@ -43,7 +58,7 @@ export default {
             currentChat: {
                 type: "group",
                 id: 1
-            }
+            },
         }
     },
     computed: {
@@ -80,6 +95,11 @@ export default {
         },
 
         async msgPosted(msg) {
+            if (this.webSocket.readyState !== 1) {
+                alert("Connection broke with websocket")
+                location.reload()
+                return
+            }
             let toServer = {
                 type: "new_message",
                 to: "group",
@@ -109,7 +129,13 @@ export default {
             }, 5*60*1000);
         },
         async renewLogin() {
-            console.log("renew");
+            if (localStorage.getItem("user")) {
+                sessionStorage.clear()
+                location.reload()
+            } else {
+                alert("Sajnos ez a funkció még nem készült el. Át leszel irányítva a bejelentkezéshez.")
+                this.logout()
+            }
         },
 
         async connectWS() {
@@ -255,16 +281,37 @@ export default {
     width: 67%;
     height: var(--innerHeight);
 }
-#profileDiv {
+
+#navigationHeader {
+    justify-content: space-between !important;
+    border-bottom: 2px solid lightgray;
+}
+#profileDiv, #navigationHeader, #chappDiv {
     align-items: center;
     cursor: pointer;
     display: flex;
+    justify-content: left;
+    border-radius: 3px;
+}
+#profileDiv:hover {
+    background-color: lightgray;
+}
+
+
+.dropMini {
+    width: 20%;
 }
 .tokenExpireAlert {
     display: none;
     position: absolute;
     top: 10px;
     right: 5px;
+}
+
+@media screen and (max-width: 600px) {
+    #dropMini {
+        width: 50px;
+    }
 }
 @media screen and (max-width: 500px) {
     #navigationDiv {
@@ -275,6 +322,14 @@ export default {
     }
     .tokenExpireAlert {
         font-size: 80%;
+    }
+    .dropMini {
+        width: 50px;
+    }
+}
+@media screen and (min-width: 1000px) {
+    #dropMini {
+        width: 60px;
     }
 }
 </style>
