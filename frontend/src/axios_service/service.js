@@ -1,17 +1,26 @@
 const axios = require("axios")
 
-const axiosService = async (url, method, data) => {
+const axiosService = async (url, method, data, options) => {
     let token = sessionStorage.getItem("x-access-token")
     
     let response
     let error = null
+    let h = {}
+    if (options?.multipart) {
+        h = {
+            "x-access-token": token,
+            "Content-Type": "multipart/form-data"
+        }
+    } else {
+        h = {
+            "x-access-token": token,
+        }
+    }
     await axios({
         url: url,
         method: method,
         data: data,
-        headers: {
-            "x-access-token": token 
-        }
+        headers: h,
     }).then(res => response = res).catch(err => {
         error = err
     })

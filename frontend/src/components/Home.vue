@@ -238,6 +238,7 @@ export default {
 
                 sessionStorage.setItem("x-access-token", token)
                 sessionStorage.setItem("x-acc-expiration", res.data.expiration)
+                this.jQuery(".tokenExpireAlert").css("display", "none")
                 sessionStorage.setItem("user", JSON.stringify(user))
             } else {
                 // the flow never should get here btw
@@ -255,7 +256,12 @@ export default {
     mounted() {
         let time = parseInt(sessionStorage.getItem("x-acc-expiration")) - Date.now() - (5*60*1000)
         if (time < 0) {
-            this.logout()
+            if (localStorage.getItem("user")) {
+                sessionStorage.clear()
+                location.reload()
+            } else {
+                this.logout()
+            }
         }
         setTimeout(() => {
             console.log("need new accesstoken");
