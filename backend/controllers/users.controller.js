@@ -1,8 +1,9 @@
 const config = require("../config/auth.config");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const { renameSync } = require("fs")
 
-const { User, Role, Token } = require("../db/models");
+const { User, Role, Token, GroupMember } = require("../db/models");
 const { genToken } = require("./tools")
 
 const login = async (req, res) => {
@@ -26,7 +27,7 @@ const login = async (req, res) => {
     } catch (err) {
         return res.status(500).json({ message: "Server error" })
     }
-    if (!user) {
+    if (!user || user.deleted) {
         return res.status(400).json({ message: "Invalid Credentials" })
     }
 
@@ -86,10 +87,17 @@ const signup = async (req, res) => {
     let user
     let encPw = await bcrypt.hash(pw, 10)
     try {
+        let now = new Date()
         user = await User.create({
             username: un,
             password: encPw,
             roleId: 1,
+            createdAt: now,
+            updatedAt: now
+        })
+        await GroupMember.create({
+            UserId: user.id,
+            GroupId: 1
         })
     } catch (err) {
         console.log(err);
@@ -151,8 +159,116 @@ const findAll = async (req, res) => {
     }
 }
 
+const changeUn = async (req, res) => {
+    let { body } = req
+    console.log("from body: " + body.userId);
+    console.log("from accesstoken: " + req.userId);
+    if (body.userId !== req.userId) {
+        return res.status(400).json({ message: "Access Denied" })
+    }
+    let userWithName = await User.findOne({ where: { username: body.newUn } })
+    if (userWithName) {
+        return res.status(400).json({ message: "Already reserved username" })        
+    }
+
+    try {
+        await User.update({
+            username: body.newUn,
+            updatedAt: new Date,
+        }, { where: { id: body.userId} })
+        return res.status(200).json({ updated: true })
+    } catch (err) {
+        return res.status(500).json({ message: "Server error" })
+    }
+}
+
+const changePw = async (req, res) => {
+    let { body } = req
+    if (body.userId !== req.userId) {
+        return res.status(400).json({ message: "Access Denied" })
+    }
+
+    let user
+    try {
+        user = await User.findOne({ where: { id: body.userId }})
+    } catch (error) {
+        return res.status(500).json({ message: "Server error" })
+    }
+
+    if (!user || user.deleted) {
+        return res.status(400).json({ message: "Invalid Credentials" })
+    }
+    const passwordIsValid = bcrypt.compareSync(
+        body.oldPw,
+        user.password
+    );
+    if (!passwordIsValid) {
+        return res.status(400).json({ message: "Invalid Credentials" })
+    }
+
+    let encPw = await bcrypt.hash(body.newPw, 10)
+    try {
+        await User.update({
+            password: encPw,
+            updatedAt: new Date,
+        }, { where: { id: body.userId} })
+        return res.status(200).json({ updated: true })
+    } catch (err) {
+        return res.status(500).json({ message: "Server error" })
+    }
+}
+
+const changeProfpic = async (req, res) => {
+    let { file } = req
+    console.log(file);
+    let extension = file.originalname.split(".").pop()
+    
+    let filename = `profpic-userId-${req.userId}.${extension}`
+    let newpath = "public/images/" + filename
+    renameSync(file.path, newpath)
+
+    return res.status(200).json({ updated: true })
+}
+
+const deleteUser = async (req, res) => {
+    let { body } = req
+
+    let user
+    try {
+        user = await User.findOne({ where: { id: body.userId }})
+    } catch (err) {
+        return res.status(500).json({ message: "Server error" })
+    }
+
+    if (!user || user.deleted) {
+        return res.status(400).json({ message: "Invalid Credentials" })
+    }
+    const passwordIsValid = bcrypt.compareSync(
+        body.pw,
+        user.password
+    );
+    if (!passwordIsValid) {
+        return res.status(400).json({ message: "Invalid Credentials" })
+    }
+
+    try {
+        await User.update({
+            deleted: true,
+            updatedAt: new Date,
+        }, { where: { id: body.userId }})
+        return res.status(200).json({ updated: true })
+    } catch (err) {
+        return res.status(500).json({ message: "Server error" })
+    }
+
+}
+
 module.exports = {
     login,
     signup,
-    findAll
+    findAll,
+    changeUn,
+    changePw,
+    changeProfpic,
+    deleteUser
 }

@@ -25,7 +25,6 @@ const axiosService = async (url, method, data, options) => {
         error = err
     })
     if(error) {
-        console.log(error.response.status);
         if(error.response.status == 401) {
             sessionStorage.clear()
             localStorage.clear()

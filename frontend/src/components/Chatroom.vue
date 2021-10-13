@@ -217,4 +217,11 @@ export default {
     overflow-y: scroll !important;
     height: var(--chatRoomHeight) !important;
 }
+
+@media screen and (max-width: 500px) {
+    
+    .dropMini {
+        width: 50px;
+    }
+}
 </style>

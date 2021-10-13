@@ -19,7 +19,6 @@
                     </div>
                 </div>
             </header>
-            <!-- <button class="btn btn-warning p-2" @click="logout">Logout</button> -->
         </div>
         <div id="chatroomDiv">
             <Chatroom :msgObj="currentMessages" @postMsg="msgPosted" ref="chatroom" />
@@ -33,7 +32,7 @@
             <a @click="renewLogin" class="alert-link" style="cursor: pointer;">Meghosszabítás</a>
         </div>
 
-        <UserManagement id="userManagement" />
+        <UserManagement id="userManagement" @logout="logout" />
     </div>
 </template>
 
@@ -314,11 +313,7 @@ export default {
     right: 5px;
 }
 
-@media screen and (max-width: 600px) {
-    #dropMini {
-        width: 50px;
-    }
-}
+
 @media screen and (max-width: 500px) {
     #navigationDiv {
         display: none;
@@ -334,7 +329,7 @@ export default {
     }
 }
 @media screen and (min-width: 1000px) {
-    #dropMini {
+    .dropMini {
         width: 60px;
     }
 }

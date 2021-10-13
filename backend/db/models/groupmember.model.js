@@ -14,7 +14,10 @@ module.exports = (sequelize, DataTypes) => {
       // this table is supposed to be a pivot
     }
   };
-  GroupMember.init({}, {
+  GroupMember.init({
+    GroupId: DataTypes.INTEGER,
+    UserId: DataTypes.INTEGER,
+  }, {
     sequelize,
     modelName: 'GroupMember',
     timestamps: false,

@@ -85,8 +85,13 @@ export default {
                 this.handleSuccess(res)
                 return
             } else if(res.error) {
-                if(res.message.response.data.message == "Invalid Credentials") {
+                let err = res.message
+                if(err.response.data.message == "Invalid Credentials") {
                     this.loginErrMsg = "Helytelen bejelentkezési adatok"
+                } else if(err.status == 500) {
+                    this.loginErrMsg = "Szerver Error"
+                } else {
+                    window.location.href = "/"
                 }
                 return
             } else {
@@ -125,8 +130,11 @@ export default {
                 this.handleSuccess(res)
                 return
             } else if(res.error) {
-                if(res.message.response.data.message == "Already reserved username") {
+                let err = res.message
+                if(err.response.data.message == "Already reserved username") {
                     this.loginErrMsg = "A felhasználónév már foglalt"
+                } else if(err.status == 500) {
+                    this.loginErrMsg = "Szerver Error"
                 } else {
                     window.location.href = "/"
                 }

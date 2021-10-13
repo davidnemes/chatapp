@@ -56,13 +56,22 @@
                                 </label>
                             </div>
                         </div>
+                        <div v-if="userAction == 'delete'">
+                            <p class="alert alert-danger">Jól gondold meg hogy kitörlöd e profilodat. A törlés
+                                <strong>végleges.</strong>
+                            </p>
+                            <div class="form-group">
+                                <label>
+                                    Jelszó:
+                                    <input class="form-control" type="password" placeholder="Jelszó..." v-model="pwForDelete">
+                                </label>
+                                <i class="ml-2 fas fa-lock" @click="seePw"></i>
+                            </div>
+                        </div>
                         <button class="btn btn-primary mb-2" @click="formSubmitted" :disabled="disabled">Megerősít</button>
                         <p class="alert alert-danger" v-if="alert !== '' && alert">{{ alert }}</p>
                         <p class="alert alert-success" v-if="success !== '' && success">{{ success }}</p>
                     </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">Mégse</button>
                 </div>
             </div>
         </div>
@@ -82,6 +91,7 @@ export default {
             newPwAgain: "",
             alert: "",
             success: "",
+            pwForDelete: "",
             process: false,
         }
     },
@@ -119,7 +129,7 @@ export default {
 
         async formSubmitted(e) {
             e.preventDefault()
-            this.alert = ""
+            this.success=this.alert= ""
             this.process = true
             switch(this.userAction) {
                 case "profpic":
@@ -132,14 +142,14 @@ export default {
                     await this.changePw()
                 break
                 case "delete":
-                
+                    await this.deleteProfile()
                 break
                 default:
                     alert("An Exception was found")
             }
             this.process = false
             setTimeout(() => {
-                this.success = ""
+                this.success=this.alert= ""
             }, 8000);
         },
         // To Server
@@ -157,34 +167,39 @@ export default {
                 userId: this.user.userId,
                 newUn: this.unInput,
             }
-            let res = await this.axios("/api/users/newun", "post", toServer)
+            let res = await this.axios("/api/users/newun", "put", toServer)
             if (res.error) {
                 let err = res.message
                 if (err.response.message == "Already reserved username") {
                     this.alert = "A felhasználónév már foglalt"
-                } else {
+                } else if (err.status == 500){
                     this.alert = "Szerver error"
+                } else {
+                    this.alert = "Error"
                 }
                 return
+            } else if(res.data.updated) {
+                let user = this.user
+                user.username = this.unInput
+                let str = JSON.stringify(user)
+                localStorage.setItem("user", str)
+                sessionStorage.setItem("user", str)
+    
+                this.success = "Felhasználóneved módosult"
+            } else {
+                this.alert = "An exception was found"
             }
-
-            let user = this.user
-            user.username = this.unInput
-            let str = JSON.stringify(user)
-            localStorage.setItem("user", str)
-            sessionStorage.setItem("user", str)
-
-            this.success = "Felhasználóneved módosult"
         },
         async changeProfpic() {
-            let input = this.jQuery("#profpicInput")
+            let input = this.jQuery("#profpicInput")[0]
             if (input.files.length > 1) {
                 this.alert = "Csak egy képet tudsz feltölteni"
             }
 
             let toServer = new FormData()
             toServer.append("profpic", input.files[0])
-            let res = await this.axios("/api/users/newprofpic", "post", toServer, { multipart: true })
+            toServer.append("userId", this.user.userId)
+            let res = await this.axios("/api/users/newprofpic", "put", toServer, { multipart: true })
 
             if (res.error) {
                 let err = res.message
@@ -194,9 +209,11 @@ export default {
                     this.alert = "Error"
                 }
                 return
+            } else if(res.data.updated) {
+                this.success = "A profilképed be lett állítva."
+            } else {
+                this.alert = "An exception was found"
             }
-
-            this.success = "A profilképed be lett állítva."
         },
         async changePw() {
             if (this.oldPw.length < 3 || this.newPw.length < 3 ) {
@@ -213,18 +230,51 @@ export default {
                 newPw: this.newPw,
                 userId: this.user.userId
             }
-            let res = await this.axios("/api/users/newpw", "post", toServer)
+            let res = await this.axios("/api/users/newpw", "put", toServer)
             if (res.error) {
                 let err = res.message
                 if (err.status == 500) {
                     this.alert = "Szerver Error"
-                } else {
-                    this.alert = "Error"
+                } else if(err.response.data.message == "Invalid Credentials") {
+                    this.alert = "Helytelen adatok"
                 }
+                return
+            } else if(res.data.updated) {
+                this.success = "Új jelszavad be lett állítva"
+                this.oldPw=this.newPw=this.newPwAgain= ""
+            } else {
+                this.alert = "An exception was found"
+            }
+        },
+        async deleteProfile() {
+            let conf = confirm("Biztosan ki szeretnéd törölni a fiókodat?")
+            if (!conf) {
+                return
+            }
+            if (this.pwForDelete.length < 3) {
+                this.alert = "Túl rövid jelszó"
                 return
             }
 
-            this.success = "Új jelszavad be lett állítva."
+            let toServer = {
+                pw: this.pwForDelete,
+                userId: this.user.userId
+            }
+            let res = await this.axios("/api/users", "delete", toServer)
+            if (res.error) {
+                let err = res.message
+                if (err.status == 500) {
+                    this.alert = "Szerver Error"
+                } else if(err.response.data.message == "Invalid Credentials") {
+                    this.alert = "Helytelen jelszó"
+                }
+                return
+            } else if(res.data.updated) {
+                alert("Fiókod ki lett törölve")
+                this.$emit("logout")
+            } else {
+                this.alert = "An exception was found"
+            }
         }
     },
     created() {
