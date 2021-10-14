@@ -137,7 +137,7 @@ export default {
                         // set current
                         msgGroup = { msgs: [] }
                         msgGroup.self = msg.self
-                        msgGroup.imgSrc = `/images/profpic-userId-${msg.userId}.jpg`
+                        msgGroup.imgSrc = `/images/profpic-userId-${msg.userId}.${msg.picExt}`
                         msgGroup.msgs.push(msg.message)
                         msgGroup.ttw = this.timeToWrite(msg.date)
                         msgGroup.un = msg.username
@@ -151,7 +151,7 @@ export default {
                         msgGroup = { msgs: [] }
                     }
                     msgGroup.self = msg.self
-                    msgGroup.imgSrc = `/images/profpic-userId-${msg.userId}.jpg`
+                    msgGroup.imgSrc = `/images/profpic-userId-${msg.userId}.${msg.picExt}`
                     msgGroup.msgs.push(msg.message)
                     msgGroup.ttw = this.timeToWrite(msg.date)
                     msgGroup.un = msg.username
@@ -194,7 +194,7 @@ export default {
             switch(true) {
                 // message today
                 case date.getTime() > (now.getTime() - timeToday):
-                    return hours
+                    return "Ma, "+hours
                 case date.getFullYear() == now.getFullYear():
                     return month
                 default:

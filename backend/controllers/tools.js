@@ -26,8 +26,15 @@ const checkToken = (token) => {
     }
 }
 
+// can return min, but can't return max
+const random = (min, max) => {
+    let k = max - min
+    return Math.floor(Math.random() * k) + min
+}
+
 module.exports = {
     genToken,
     isJson,
-    checkToken
+    checkToken,
+    random
 }

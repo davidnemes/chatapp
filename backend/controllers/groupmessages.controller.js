@@ -7,7 +7,7 @@ const findAll = async (req, res) => {
             where: { groupId: id },
             include: {
                 model: User,
-                attributes: ["username", "id"],
+                attributes: ["username", "id", "picExt"],
                 as: "User"
             }
         })

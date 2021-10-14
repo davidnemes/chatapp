@@ -5,3 +5,4 @@ db/prod.db.sqlite
 # every profpic except default
 public/images/*
 !profpic-default.jpg
+public/deleted/*

@@ -9,7 +9,7 @@
                 <div class="dropdown">
                     <div @click="toProfile" id="profileDiv" class="p-2" data-toggle="dropdown">
                         <span class="mr-2">{{ user.username }}</span>
-                        <img :src="`/images/profpic-userId-${user.userId}.jpg`" alt="..." class="avatar" onerror="this.src='/images/profpic-default.jpg'">
+                        <img :src="`/images/profpic-userId-${user.userId}.${user.picExt}`" alt="..." class="avatar" onerror="this.src='/images/profpic-default.jpg'">
                     </div>
                     <div class="dropdown-menu dropright">
                         <h4 class="dropdown-header">{{ user.username }}</h4>
@@ -85,7 +85,8 @@ export default {
                     date: new Date(msgobj.date),
                     // create self
                     self: msgobj.userId == this.user.userId,
-                    username: msgobj.User.username
+                    username: msgobj.User.username,
+                    picExt: msgobj.User.picExt
                 }
                 return msg
             });
@@ -106,6 +107,7 @@ export default {
                 message: msg,
                 userId: this.user.userId,
                 username: this.user.username,
+                picExt: this.user.picExt,
                 date: new Date(),
                 groupId: this.currentChat.id,
             }
@@ -119,22 +121,6 @@ export default {
                 self: true,
                 date: new Date()
             })
-        },
-
-        accessTokenExpire() {
-            this.jQuery(".tokenExpireAlert").css("display", "block")
-            setTimeout(() => {
-                this.logout()
-            }, 5*60*1000);
-        },
-        async renewLogin() {
-            if (localStorage.getItem("user")) {
-                sessionStorage.clear()
-                location.reload()
-            } else {
-                alert("Sajnos ez a funkció még nem készült el. Át leszel irányítva a bejelentkezéshez.")
-                this.logout()
-            }
         },
 
         async connectWS() {
@@ -169,6 +155,7 @@ export default {
                     this.currentMessages.messages.push({
                         userId: msg.userId,
                         username: msg.username,
+                        picExt: msg.picExt,
                         message: msg.message,
                         date: new Date(msg.date),
                         // create self
@@ -182,6 +169,43 @@ export default {
                 console.log("got unparseable string: ");
                 console.log(event.data);
             }
+        },
+
+        // Accesstoken expiration
+        accessTokenExpire() {
+            this.jQuery(".tokenExpireAlert").css("display", "block")
+            setTimeout(() => {
+                if (localStorage.getItem("user")) {
+                    sessionStorage.clear()
+                    location.reload()
+                } else {
+                    this.logout()
+                }
+            }, 5*60*1000);
+        },
+        async renewLogin() {
+            if (localStorage.getItem("user")) {
+                sessionStorage.clear()
+                location.reload()
+            } else {
+                alert("Sajnos ez a funkció még nem készült el. Át leszel irányítva a bejelentkezéshez.")
+                this.logout()
+            }
+        },
+        setAccTokenExpire() {
+            let time = parseInt(sessionStorage.getItem("x-acc-expiration")) - Date.now() - (5*60*1000)
+            if (time < 0) {
+                if (localStorage.getItem("user")) {
+                    sessionStorage.clear()
+                    location.reload()
+                } else {
+                    this.logout()
+                }
+            }
+            setTimeout(() => {
+                console.log("need new accesstoken");
+                this.accessTokenExpire()
+            }, time)
         },
 
         // Functions with CSS variables
@@ -222,7 +246,7 @@ export default {
             let lsuser = localStorage.getItem("user")
             if(lsuser) {
                 // user hit remember me
-                let user = JSON.parse(localStorage.getItem("user"))
+                let user = JSON.parse(lsuser)
                 let data = {
                     reason: "remember_me",
                     user,
@@ -245,27 +269,15 @@ export default {
             }
         }
 
+        // Set access-token expiration
+        this.setAccTokenExpire()
+
         // Set cssRoot and height
         this.setCSSandHeights()
 
         // Load Messages
         await this.loadMessages()
         await this.connectWS()
-    },
-    mounted() {
-        let time = parseInt(sessionStorage.getItem("x-acc-expiration")) - Date.now() - (5*60*1000)
-        if (time < 0) {
-            if (localStorage.getItem("user")) {
-                sessionStorage.clear()
-                location.reload()
-            } else {
-                this.logout()
-            }
-        }
-        setTimeout(() => {
-            console.log("need new accesstoken");
-            this.accessTokenExpire()
-        }, time)
     }
 }
 </script>

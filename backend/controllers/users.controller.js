@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const { renameSync } = require("fs")
 
 const { User, Role, Token, GroupMember } = require("../db/models");
-const { genToken } = require("./tools")
+const { genToken, random } = require("./tools")
 
 const login = async (req, res) => {
 
@@ -62,7 +62,8 @@ const login = async (req, res) => {
         user: {
             userId: user.id,
             role: user.Role,
-            username: user.username
+            username: user.username,
+            picExt: user.picExt
         },
         rememberToken: rmToken
     })
@@ -137,7 +138,8 @@ const signup = async (req, res) => {
         user: {
             userId: userToSend.id,
             role: userToSend.Role,
-            username: user.username
+            username: user.username,
+            picExt: userToSend.picExt
         },
         rememberToken: rmToken
     })
@@ -220,14 +222,42 @@ const changePw = async (req, res) => {
 
 const changeProfpic = async (req, res) => {
     let { file } = req
-    console.log(file);
+
+    // put previous pic to deleted
+    // num is for just in case the user has already uploaded more pics
+    let num = random(100, 1000)
+    try {
+        let user = await User.findOne({ where: {id: req.userId}})
+        if (!user) {
+            return res.status(400).json({ message: "User not found" })
+        }
+        if (user.picExt) {
+            renameSync(
+                `public/images/profpic-userId-${req.userId}.${user.picExt}`, 
+                `public/deleted/profpic-userId-${req.userId}_${num}.${user.picExt}`)
+        }
+    } catch (error) {
+        return res.status(500).json({ message: "Server error" })
+    }
+
+    // store new pic
+
     let extension = file.originalname.split(".").pop()
-    
     let filename = `profpic-userId-${req.userId}.${extension}`
     let newpath = "public/images/" + filename
-    renameSync(file.path, newpath)
+    try {
+        renameSync(file.path, newpath)
+        await User.update({
+            picExt: extension
+        }, { where: {id: req.userId}})
+    } catch (err) {
+        return res.status(500).json({ message: "Server error" })
+    }
 
-    return res.status(200).json({ updated: true })
+    return res.status(200).json({
+        updated: true,
+        newExt: extension
+    })
 }
 
 const deleteUser = async (req, res) => {

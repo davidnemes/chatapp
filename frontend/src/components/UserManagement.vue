@@ -198,7 +198,6 @@ export default {
 
             let toServer = new FormData()
             toServer.append("profpic", input.files[0])
-            toServer.append("userId", this.user.userId)
             let res = await this.axios("/api/users/newprofpic", "put", toServer, { multipart: true })
 
             if (res.error) {
@@ -211,6 +210,9 @@ export default {
                 return
             } else if(res.data.updated) {
                 this.success = "A profilképed be lett állítva."
+                let newuser = this.user
+                newuser.picExt = res.data.newExt
+                sessionStorage.setItem("user", JSON.stringify(newuser))
             } else {
                 this.alert = "An exception was found"
             }

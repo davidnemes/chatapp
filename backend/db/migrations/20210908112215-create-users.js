@@ -17,6 +17,9 @@ module.exports = {
       roleId: {
         type: Sequelize.INTEGER
       },
+      picExt: {
+        type: Sequelize.STRING
+      },
       deleted: {
         type: Sequelize.BOOLEAN,
         defaultValue: false
