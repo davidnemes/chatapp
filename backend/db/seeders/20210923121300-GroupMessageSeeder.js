@@ -12,6 +12,11 @@ module.exports = {
       groupId: 1,
       date: new Date(Date.now() + (3 * 60 * 1000)),
       message: "Hali"
+    }, {
+      userId: 1,
+      groupId: 2,
+      date: new Date(Date.now() + (5 * 60 * 1000)),
+      message: "Hello, ez itt a moderator csoport"
     }], {})
 
   },

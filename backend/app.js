@@ -7,6 +7,7 @@ var usersRouter = require('./routes/users.routes');
 var tokenRouter = require('./routes/tokens.routes');
 var groupMessageRouter = require('./routes/groupmessages.routes');
 var groupMemberRouter = require('./routes/groupmembers.routes.js')
+var chatsRouter = require('./routes/chats.routes.js')
 
 var app = express();
 
@@ -25,6 +26,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/groupmessages', groupMessageRouter);
 app.use('/api/groupmembers', groupMemberRouter);
 app.use('/api/token', tokenRouter);
+app.use('/api/chats', chatsRouter);
 
 // 404
 app.use('/*', (req, res, next) => res.sendFile(path.join(__dirname, "./static_views/404.html")))

@@ -7,6 +7,12 @@ module.exports = {
       title: 'Public',
       isPrivate: false,
       createdAt: new Date(),
+      updatedAt: new Date(),
+    }, {
+      title: 'Mods',
+      isPrivate: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     }], {})
   },
 

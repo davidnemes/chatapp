@@ -10,7 +10,8 @@
     },
     "production": {
         "storage": "/home/david/OwnProjects/chatapp/backend/db/prod.db.sqlite",
-        "dialect": "sqlite"
+        "dialect": "sqlite",
+        "logging": false
     }
   }
   

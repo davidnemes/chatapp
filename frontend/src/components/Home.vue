@@ -1,7 +1,7 @@
 <template>
     <div id="outerDiv">
         <div id="navigationDiv">
-            <header id="navigationHeader" class="m-1 p-1">
+            <header id="navigationHeader" class="p-1">
                 <div id="chappDiv">
                     <img src="../assets/drop.png" alt="csepp" class="dropMini">
                     <h4 class="m-0"><i>Chapp</i></h4>
@@ -19,6 +19,7 @@
                     </div>
                 </div>
             </header>
+            <Chats id="navigationChats" :chatsObj="chatsObj" @changeChat="chatChanged" ref="chats" />
         </div>
         <div id="chatroomDiv">
             <Chatroom :msgObj="currentMessages" @postMsg="msgPosted" ref="chatroom" />
@@ -39,25 +40,37 @@
 <script>
 import Chatroom from "./Chatroom.vue"
 import UserManagement from "./UserManagement.vue"
+import Chats from "./Chats.vue"
 
 export default {
     name: "Home",
     components: {
         Chatroom,
         UserManagement,
+        Chats
     },
     data() {
         return {
             webSocket: null,
             cssRoot: null,
-            // an error occured when i did it like --> currentMessages = []
+            // an error occured when i did it like --> currentMessages = [] and chats = []
+            // the outer object is needed for asynchronous mutation
             currentMessages: {
                 messages: []
             },
+            chatsObj: {
+                chats: [],
+                // chats that has to be bold
+                gotNewMsg: [],
+            },
+
             currentChat: {
                 type: "group",
                 id: 1
             },
+
+            // cache for messages
+            messages: {}
         }
     },
     computed: {
@@ -67,6 +80,10 @@ export default {
             } else {
                 return { userId: 0, username: "default", role: { role: "user", weight: 10 }}
             }
+        },
+        chatName() {
+            let { id, type } = this.currentChat
+            return `${type}-${id}`
         }
     },
     methods: {
@@ -75,8 +92,26 @@ export default {
             localStorage.clear()
             window.location.href = "/"
         },
+        async loadChats() {
+            let data = (await this.axios("/api/chats/"+ this.user.userId)).data
+            if (!data) { return false }
+            
+            this.currentChat.type = data.chats[0].group ? "group" : "private"
+            this.currentChat.id = data.chats[0].id
+
+            this.chatsObj.chats = data.chats
+        },
         async loadMessages() {
-            let messages = (await this.axios("/api/groupmessages/1")).data
+            let { id, type } = this.currentChat
+            let messages
+            if (type == "group") {
+                messages = (await this.axios("/api/groupmessages/"+id)).data
+            } else if(type == "private") {
+                messages = (await this.axios("/api/privatemessages/"+id)).data
+            } else {
+                alert("Error at loading messages, chat type does not match")
+                return false
+            }
             if(!messages) { return false }
             let handledArr = messages.map(msgobj => {
                 let msg = {
@@ -92,51 +127,69 @@ export default {
             });
             this.currentMessages.messages = handledArr
             this.$refs.chatroom.scrollDown()
+
+            // caching loaded messages
+            this.messages[this.chatName] = handledArr
         },
 
+        chatChanged(to) {
+            this.currentChat.type = to.chatType
+            this.currentChat.id = to.chatId
+
+            let cached = this.messages[this.chatName]
+            if (cached) {
+                this.currentMessages.messages = cached
+                this.$refs.chatroom.scrollDown()
+            } else {
+                this.loadMessages()
+            }
+            this.chatsObj.gotNewMsg = this.chatsObj.gotNewMsg.filter(id => id != this.chatName)
+        },
         async msgPosted(msg) {
             if (this.webSocket.readyState !== 1) {
                 alert("Connection broke with websocket")
                 location.reload()
                 return
             }
+            let now = new Date()
             let toServer = {
                 type: "new_message",
-                to: "group",
+                to: this.currentChat.type,
 
                 message: msg,
                 userId: this.user.userId,
                 username: this.user.username,
                 picExt: this.user.picExt,
-                date: new Date(),
-                groupId: this.currentChat.id,
+                date: now,
+                chatId: this.currentChat.id,
             }
 
             this.webSocket.send(JSON.stringify(toServer))
             // push local
             this.currentMessages.messages.push({
+                message: msg,
                 userId: this.user.userId,
                 username: this.user.username,
-                message: msg,
+                picExt: this.user.picExt,
+                date: now,
                 self: true,
-                date: new Date()
             })
         },
 
         async connectWS() {
             const res = await this.axios("/api/token/ws")
             if(res.status !== 200) {
-                alert("Error at connecting WebSocket")
+                alert("Error at starting WebSocket")
                 return
             }
 
-            const webSocket = new WebSocket(`ws://${location.host}/?token=${res.data.token}`);
+            const webSocket = new WebSocket(`ws://${location.host}/?token=${res.data.token}&id=${this.user.userId}`);
             webSocket.onerror = (err) => {
                 if(err.eventPhase === 2) {
                     // Maybe the LanIP was set poorly.
-                    alert("Error at connecting ws.")
+                    alert("Error at WS connection.")
                 } else {
-                    alert("Error at ws.")
+                    alert("Error at WS.")
                 }
             }
             webSocket.onopen = () => {
@@ -149,48 +202,56 @@ export default {
         },
 
         wsOnMessage(event) {
-            if (this.isJson(event.data)) {
-                let msg = JSON.parse(event.data)
-                if (this.currentChat.type == msg.to && this.currentChat.id == msg.groupId) {
-                    this.currentMessages.messages.push({
-                        userId: msg.userId,
-                        username: msg.username,
-                        picExt: msg.picExt,
-                        message: msg.message,
-                        date: new Date(msg.date),
-                        // create self
-                        self: msg.userId == this.user.userId,
-                    })
-                    this.$refs.chatroom.scrollDown()
-                } else {
-                    // received message not for this chatroom
-                }
-            } else {
+            console.log("got msg");
+            if (!this.isJson(event.data)) {
                 console.log("got unparseable string: ");
                 console.log(event.data);
+                return
+            }
+
+            let msg = JSON.parse(event.data)
+            let objToPush = {
+                userId: msg.userId,
+                username: msg.username,
+                picExt: msg.picExt,
+                message: msg.message,
+                date: new Date(msg.date),
+                // create self
+                self: msg.userId == this.user.userId,
+            }
+            if (this.currentChat.type == msg.to && this.currentChat.id == msg.chatId) {
+                this.currentMessages.messages.push(objToPush)
+                this.$refs.chatroom.scrollDown()
+            } else {
+                // received message not for this chatroom
+                let forChat = `${msg.to}-${msg.chatId}`
+                this.chatsObj.gotNewMsg.push(forChat)
+                let cached = this.messages[forChat]
+                if (cached) {
+                    cached.push(objToPush)
+                }
             }
         },
 
         // Accesstoken expiration
-        accessTokenExpire() {
-            this.jQuery(".tokenExpireAlert").css("display", "block")
-            setTimeout(() => {
-                if (localStorage.getItem("user")) {
-                    sessionStorage.clear()
-                    location.reload()
-                } else {
-                    this.logout()
-                }
-            }, 5*60*1000);
-        },
-        async renewLogin() {
-            if (localStorage.getItem("user")) {
-                sessionStorage.clear()
-                location.reload()
-            } else {
-                alert("Sajnos ez a funkció még nem készült el. Át leszel irányítva a bejelentkezéshez.")
+        async newAccessToken(user) {
+            let data = {
+                reason: "remember_me",
+                user,
+                token: localStorage.getItem("x-remember-token").replaceAll('"', '')
+            }
+            let res = await this.axios("/api/token/accesstoken", "post", data)
+            let token = res.data.accessToken
+            
+            if (res.error || !token) {
+                alert("Sikertelen bejelentkezés")
                 this.logout()
             }
+
+            sessionStorage.setItem("x-access-token", token)
+            sessionStorage.setItem("x-acc-expiration", res.data.expiration)
+            this.jQuery(".tokenExpireAlert").css("display", "none")
+            sessionStorage.setItem("user", JSON.stringify(user))
         },
         setAccTokenExpire() {
             let time = parseInt(sessionStorage.getItem("x-acc-expiration")) - Date.now() - (5*60*1000)
@@ -206,6 +267,26 @@ export default {
                 console.log("need new accesstoken");
                 this.accessTokenExpire()
             }, time)
+        },
+        accessTokenExpire() {
+            this.jQuery(".tokenExpireAlert").css("display", "block")
+            setTimeout(() => {
+                if (localStorage.getItem("user")) {
+                    sessionStorage.clear()
+                    location.reload()
+                } else {
+                    this.logout()
+                }
+            }, 5*60*1000);
+        },
+        renewLogin() {
+            if (localStorage.getItem("user")) {
+                sessionStorage.clear()
+                location.reload()
+            } else {
+                alert("Mivel nem kérted bejelentkezésed megjegyzését, át leszel irányítva a bejelentkezéshez.")
+                this.logout()
+            }
         },
 
         // Functions with CSS variables
@@ -247,22 +328,7 @@ export default {
             if(lsuser) {
                 // user hit remember me
                 let user = JSON.parse(lsuser)
-                let data = {
-                    reason: "remember_me",
-                    user,
-                    token: localStorage.getItem("x-remember-token").replaceAll('"', '')
-                }
-                let res = await this.axios("/api/token/accesstoken", "post", data)
-                let token = res.data.accessToken
-                
-                if(!token) {
-                    this.logout()
-                }
-
-                sessionStorage.setItem("x-access-token", token)
-                sessionStorage.setItem("x-acc-expiration", res.data.expiration)
-                this.jQuery(".tokenExpireAlert").css("display", "none")
-                sessionStorage.setItem("user", JSON.stringify(user))
+                await this.newAccessToken(user)
             } else {
                 // the flow never should get here btw
                 this.$router.push("/login")
@@ -274,6 +340,9 @@ export default {
 
         // Set cssRoot and height
         this.setCSSandHeights()
+
+        // Load Chats
+        await this.loadChats()
 
         // Load Messages
         await this.loadMessages()
@@ -313,7 +382,10 @@ export default {
 #profileDiv:hover {
     background-color: lightgray;
 }
-
+#navigationChats {
+    overflow-y: scroll;
+    height: calc(var(--innerHeight) - 62px);
+}
 
 .dropMini {
     width: 20%;

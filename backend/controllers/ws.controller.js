@@ -1,16 +1,22 @@
 const sanitizeHTML = require("sanitize-html")
 
-const { GroupMessage, Token } = require("../db/models")
+const { GroupMessage, Group, Token } = require("../db/models")
 const { isJson } = require("./tools")
+const { userWithChats } = require("./chats.controller")
 
 // MAIN CONTROLLER
 
 const wsController = async (ws, wss, req) => {
 
     // Validating token
-    const token = req.url.split("?token=")[1]
-    if(token == req.url) {
-        console.log("Unauthorized ws request came in");
+    let token
+    let userId
+    try {
+        const queries = req.url.split("?")[1].split("&")
+        token = queries[0].split("token=")[1]
+        userId = queries[1].split("id=")[1]
+    } catch (err) {
+        console.log("WS -> got connection with poor authorization");
         ws.send("Unauthorized")
         return ws.terminate()
     }
@@ -26,9 +32,13 @@ const wsController = async (ws, wss, req) => {
         return ws.terminate()
     }
 
-    console.log('A new client Connected!');
+    // New connection
+    console.log('WS -> A new client Connected!');
     ws.send('Welcome New Client!');
+    ws.userId = userId
+    ws.chats = (await userWithChats(userId)).chats
 
+    // Listening for messages
     ws.on("message", (data) => {
         let msgString = data.toString()
 
@@ -43,7 +53,7 @@ const wsController = async (ws, wss, req) => {
                     console.log(msg);
             }
         } else {
-            console.log("got a string message from a connection: ");
+            console.log("WS -> got a string message from a connection: ");
             console.log(msg);
         }
     })
@@ -52,29 +62,40 @@ const wsController = async (ws, wss, req) => {
 // CONTROLLER FUNCTIONS
 
 const newMessage = async (msg, ws, wss) => {
+    // validate message
     let cleanMsg = sanitizeHTML(msg.message)
     msg.message = cleanMsg
     if (cleanMsg == "") {
-        console.log("WARNING: Someone wrote html-dirty message");
+        console.log("WS -> WARNING: Someone wrote html-dirty message");
         return false
     }
+
+    // handle message
     switch(msg.to) {
         case "group":
             try {
                 await GroupMessage.create({
                     message: msg.message,
                     userId: msg.userId,
-                    groupId: msg.groupId,
+                    groupId: msg.chatId,
                     date: msg.date
                 })
+                await Group.update({ updatedAt: msg.date }, { where: {id: msg.chatId} })
                 wss.clients.forEach(client => {
                     // 1 is basically WebSocket.OPEN
-                    if (client !== ws && client.readyState === 1) {
-                        client.send(JSON.stringify(msg))
-                    }
+                    if (client == ws || client.readyState !== 1) return
+                    
+                    // check if user is a member of this group
+                    console.log("Client chats: ");
+                    console.log(client.chats);
+                    let isMember = false
+                    client.chats.forEach(chat => {
+                        if (chat.group == true && chat.id == msg.chatId) isMember = true
+                    })
+                    if (isMember) client.send(JSON.stringify(msg))
                 })
             } catch (err) {
-                console.log("Server Error At WS");
+                console.log("WS -> Server Error");
             }
         break;
         case "private":
@@ -85,9 +106,6 @@ const newMessage = async (msg, ws, wss) => {
             console.log(msg);
     }
 }
-
-// CONNECTING
-
 
 module.exports = {
     wsController

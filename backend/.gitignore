@@ -2,7 +2,8 @@ node_modules
 .env
 db/dev.db.sqlite
 db/prod.db.sqlite
-# every profpic except default
+# every profpic except defaults
 public/images/*
 !profpic-default.jpg
+!grouppic-default.png
 public/deleted/*

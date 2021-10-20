@@ -127,7 +127,7 @@ h4.card-title {
     text-align: center;
     border-radius: 100%;
     background-color: #f5f6f7;
-    color: #8b95a5;
+    color: #b7bdc5;
     text-transform: uppercase
 }
 
@@ -148,7 +148,7 @@ h4.card-title {
     background-color: #f5f6f7;
     border-radius: 3px;
     font-weight: 100;
-    color: #9b9b9b
+    color: #484848
 }
 
 .media>* {
@@ -160,7 +160,7 @@ h4.card-title {
     background-color: transparent !important;
     padding: 0;
     opacity: .8;
-    color: #9b9b9b !important;
+    color: #5e5e5e !important;
 }
 
 .media-meta-day {
@@ -172,12 +172,6 @@ h4.card-title {
     color: #8b95a5;
     opacity: .8;
     font-weight: 400
-}
-
-.media {
-    padding: 16px 12px;
-    -webkit-transition: background-color .2s linear;
-    transition: background-color .2s linear
 }
 
 .media-meta-day::before {
@@ -217,7 +211,7 @@ h4.card-title {
 }
 
 .media {
-    padding: 16px 12px;
+    padding: 12px;
     -webkit-transition: background-color .2s linear;
     transition: background-color .2s linear
 }
