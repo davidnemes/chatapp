@@ -80,14 +80,16 @@ const newMessage = async (msg, ws, wss) => {
                     groupId: msg.chatId,
                     date: msg.date
                 })
-                await Group.update({ updatedAt: msg.date }, { where: {id: msg.chatId} })
+                await Group.update({
+                    updatedAt: msg.date,
+                    // had to update stg else too, only updatedAt didn't work
+                    id: msg.chatId
+                }, { where: {id: msg.chatId} })
                 wss.clients.forEach(client => {
                     // 1 is basically WebSocket.OPEN
                     if (client == ws || client.readyState !== 1) return
                     
                     // check if user is a member of this group
-                    console.log("Client chats: ");
-                    console.log(client.chats);
                     let isMember = false
                     client.chats.forEach(chat => {
                         if (chat.group == true && chat.id == msg.chatId) isMember = true

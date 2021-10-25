@@ -96,7 +96,7 @@ export default {
             let data = (await this.axios("/api/chats/"+ this.user.userId)).data
             if (!data) { return false }
             
-            this.currentChat.type = data.chats[0].group ? "group" : "private"
+            this.currentChat.type = data.chats[0].type
             this.currentChat.id = data.chats[0].id
 
             this.chatsObj.chats = data.chats
@@ -174,6 +174,16 @@ export default {
                 date: now,
                 self: true,
             })
+
+            // move chat to top
+            let index = this.chatsObj.chats.findIndex(chat => {
+                return chat.type == this.currentChat.type && chat.id == this.currentChat.id
+            })
+            if (index != 0 && index != -1) {
+                // splice takes out the chat from chats
+                let chatAtIndex = this.chatsObj.chats.splice(index, 1)[0]
+                this.chatsObj.chats.unshift(chatAtIndex)
+            }
         },
 
         async connectWS() {
@@ -193,7 +203,7 @@ export default {
                 }
             }
             webSocket.onopen = () => {
-                console.log("ws opened");
+                console.log("WS -> ws opened");
             }
             webSocket.onmessage = (event) => {
                 this.wsOnMessage(event)
@@ -202,35 +212,51 @@ export default {
         },
 
         wsOnMessage(event) {
-            console.log("got msg");
             if (!this.isJson(event.data)) {
-                console.log("got unparseable string: ");
+                console.log("WS -> got unparseable string: ");
                 console.log(event.data);
                 return
             }
 
             let msg = JSON.parse(event.data)
-            let objToPush = {
-                userId: msg.userId,
-                username: msg.username,
-                picExt: msg.picExt,
-                message: msg.message,
-                date: new Date(msg.date),
-                // create self
-                self: msg.userId == this.user.userId,
-            }
-            if (this.currentChat.type == msg.to && this.currentChat.id == msg.chatId) {
-                this.currentMessages.messages.push(objToPush)
-                this.$refs.chatroom.scrollDown()
-            } else {
-                // received message not for this chatroom
-                let forChat = `${msg.to}-${msg.chatId}`
-                this.chatsObj.gotNewMsg.push(forChat)
-                let cached = this.messages[forChat]
-                if (cached) {
-                    cached.push(objToPush)
+            if (msg.type == "new_message") {
+                let objToPush = {
+                    userId: msg.userId,
+                    username: msg.username,
+                    picExt: msg.picExt,
+                    message: msg.message,
+                    date: new Date(msg.date),
+                    // create self
+                    self: msg.userId == this.user.userId,
                 }
+
+                if (this.currentChat.type == msg.to && this.currentChat.id == msg.chatId) {
+                    this.currentMessages.messages.push(objToPush)
+                    this.$refs.chatroom.scrollDown()
+                } else {
+                    // received message not for this chatroom
+                    let forChat = `${msg.to}-${msg.chatId}`
+                    this.chatsObj.gotNewMsg.push(forChat)
+                    let cached = this.messages[forChat]
+                    if (cached) {
+                        cached.push(objToPush)
+                    }
+                }
+                
+                // move chat to top
+                let index = this.chatsObj.chats.findIndex(chat => {
+                    return msg.to == chat.type && msg.chatId == chat.id
+                })
+                if (index != 0 && index != -1) {
+                    // splice takes out the chat from chats
+                    let chatAtIndex = this.chatsObj.chats.splice(index, 1)[0]
+                    this.chatsObj.chats.unshift(chatAtIndex)
+                }
+            } else {
+                console.log("WS -> got Something different");
+                console.log(msg);
             }
+            
         },
 
         // Accesstoken expiration

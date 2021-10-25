@@ -141,16 +141,6 @@ h4.card-title {
     min-width: 0
 }
 
-.media-chat .media-body p {
-    position: relative;
-    padding: 6px 8px;
-    margin: 4px 0;
-    background-color: #f5f6f7;
-    border-radius: 3px;
-    font-weight: 100;
-    color: #484848
-}
-
 .media>* {
     margin: 0 8px
 }
@@ -232,7 +222,11 @@ p.meta {
     padding: 6px 8px;
     margin: 4px 0;
     background-color: #f5f6f7;
-    border-radius: 3px
+    border-radius: 3px;
+    font-weight: 100;
+    color: #484848;
+    float: left;
+    clear: left
 }
 
 .border-light {

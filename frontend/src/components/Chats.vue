@@ -9,7 +9,10 @@
                 @click="toChat">
                 <img v-if="chat.group" :src="`/images/grouppic-default.png`" data-child="true" alt="..." class="avatar chatPic" onerror="this.src='/images/grouppic-default.jpg'">
                 <img v-if="chat.private" :src="`/images/profpic-userId-${user.userId}.${user.picExt}`" data-child="true" alt="..." class="avatar chatPic" onerror="this.src='/images/profpic-default.jpg'">
-                <h6 class="m-0" :class="chat.font_weight" data-child="true">{{ chat.title }}</h6>
+                <h6 class="m-0" :class="chat.font_weight" data-child="true">
+                    {{ chat.title }}
+                    <i v-if="chat.font_weight == 'font-weight-bold'" class="fas fa-exclamation-circle ml-3"></i>
+                </h6>
             </li>
         </ul>
         <div v-else>
@@ -34,12 +37,7 @@ export default {
             if (this.chatsObj.chats.length < 1) return [] 
             let toRender = this.chatsObj.chats.map(chat => {
                 let newChat = chat
-                let elId
-                if (chat.group) {
-                    elId = `group-${chat.id}`
-                } else if(chat.private) {
-                    elId = `private-${chat.id}`
-                }
+                let elId = `${chat.type}-${chat.id}`
                 newChat.elId = elId
                 newChat.font_weight = this.chatsObj.gotNewMsg.includes(elId) ? "font-weight-bold" : "font-weight-normal"
                 return newChat

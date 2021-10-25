@@ -180,8 +180,15 @@ export default {
             if(lsuser && !sessionStorage.getItem("user")) {
                 sessionStorage.setItem("user", lsuser)
             }
-            this.$router.push("/home")
+            return this.$router.push("/home")
         }
+
+        // if it came this far, user is not logged in
+        // test sessionStorage and localStorage
+        sessionStorage.setItem("test", "stg")
+        localStorage.setItem("test", "stgelse")
+        sessionStorage.clear("test")
+        localStorage.clear("test")
 
         // set css
         this.setCSSandHeights()

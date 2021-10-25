@@ -17,11 +17,13 @@ const userWithChats = async (id) => {
         include: {
             model: Group,
             attributes: ["id", "title", "updatedAt"],
-            order: [
-                ['updatedAt', 'ASC']
-            ]
-        }
+        },
     })
+
+    // sorting groups (pasted code)
+    user.Groups.sort(function(a,b){
+        return new Date(b.updatedAt) - new Date(a.updatedAt);
+    });
 
     let toReturn = {
         userId: user.id,
@@ -30,6 +32,7 @@ const userWithChats = async (id) => {
     user.Groups.forEach(group => {
         toReturn.chats.push({
             group: true,
+            type: "group",
             id: group.id,
             title: group.title,
             updatedAt: group.updatedAt

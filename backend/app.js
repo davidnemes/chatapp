@@ -2,6 +2,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+require('dotenv').config();
 
 var usersRouter = require('./routes/users.routes');
 var tokenRouter = require('./routes/tokens.routes');
@@ -11,7 +12,7 @@ var chatsRouter = require('./routes/chats.routes.js')
 
 var app = express();
 
-app.use(logger('dev'));
+if(process.env.NODE_ENV == "development") app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
