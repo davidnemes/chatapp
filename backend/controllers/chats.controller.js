@@ -1,5 +1,7 @@
 
-const { User, Group } = require("../db/models")
+const { User, Group, PrivateConnection } = require("../db/models")
+const { Op } = require("sequelize")
+
 
 
 const findAll = async (req, res) => {
@@ -11,7 +13,9 @@ const findAll = async (req, res) => {
 }
 
 const userWithChats = async (id) => {
-    let user = await User.findOne({
+    // get groups
+    // == userWithGroups
+    let userWG = await User.findOne({
         where: { id: id },
         attributes: ["id"],
         include: {
@@ -20,16 +24,31 @@ const userWithChats = async (id) => {
         },
     })
 
-    // sorting groups (pasted code)
-    user.Groups.sort(function(a,b){
-        return new Date(b.updatedAt) - new Date(a.updatedAt);
-    });
+    // get private connections
+    let cons = await PrivateConnection.findAll({
+        where: {
+            [Op.or]: [
+                { userId_1: id },
+                { userId_2: id }
+            ],
+            status: "stable"
+        }
+    })
+    for(let i = 0; i< cons.length; i++) {
+        let otherId = id == cons[i].userId_1 ? cons[i].userId_2 : cons[i].userId_1
+        let otherUser = await User.findOne({
+            where: { id: otherId },
+            attributes: ["id", "username", "picExt"]
+        })
+        cons[i].otherUser = otherUser
+    }
 
+    // push chats to toReturn
     let toReturn = {
-        userId: user.id,
+        userId: userWG.id,
         chats: []
     }
-    user.Groups.forEach(group => {
+    userWG.Groups.forEach(group => {
         toReturn.chats.push({
             group: true,
             type: "group",
@@ -38,6 +57,23 @@ const userWithChats = async (id) => {
             updatedAt: group.updatedAt
         })
     })
+    cons.forEach(con => {
+        toReturn.chats.push({
+            private: true,
+            type: "private",
+            id: con.id,
+            title: con.otherUser.username,
+            picExt: con.otherUser.picExt,
+            otherUserId: con.otherUser.id,
+            updatedAt: con.updatedAt
+        })
+    })
+
+    // sorting chats (pasted code)
+    toReturn.chats.sort(function(a,b){
+        return new Date(b.updatedAt) - new Date(a.updatedAt);
+    });
+
     return toReturn
 }
 

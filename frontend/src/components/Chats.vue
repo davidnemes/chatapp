@@ -4,11 +4,11 @@
             <li class="chatLink m-2 p-2"
                 v-for="chat, index in renderChats"
                 :key="index"
-                :class="currentChatId == chat.id ? 'activeChat' : ''"
+                :class="currentChatId == chat.elId ? 'activeChat' : ''"
                 :id="chat.elId"
                 @click="toChat">
                 <img v-if="chat.group" :src="`/images/grouppic-default.png`" data-child="true" alt="..." class="avatar chatPic" onerror="this.src='/images/grouppic-default.jpg'">
-                <img v-if="chat.private" :src="`/images/profpic-userId-${user.userId}.${user.picExt}`" data-child="true" alt="..." class="avatar chatPic" onerror="this.src='/images/profpic-default.jpg'">
+                <img v-if="chat.private" :src="`/images/profpic-userId-${chat.otherUserId}.${chat.picExt}`" data-child="true" alt="..." class="avatar chatPic" onerror="this.src='/images/profpic-default.jpg'">
                 <h6 class="m-0" :class="chat.font_weight" data-child="true">
                     {{ chat.title }}
                     <i v-if="chat.font_weight == 'font-weight-bold'" class="fas fa-exclamation-circle ml-3"></i>
@@ -29,7 +29,8 @@ export default {
     },
     data() {
         return {
-            currentChatId: null
+            currentChatId: null,
+            first: true
         }
     },
     computed: {
@@ -52,18 +53,24 @@ export default {
 
             let datas = t.id.split("-")
 
-            let toParent = {
+            let toParentComp = {
                 chatType: datas[0],
                 chatId: datas[1]
             }
-            this.$emit("changeChat", toParent)
-            this.currentChatId = datas[1]
+            this.$emit("changeChat", toParentComp)
+            this.currentChatId = t.id
+            console.log("new current chat with id: ");
+            console.log(this.currentChatId);
+        },
+        selectFirst() {
+            if (this.first) {
+                this.first = false
+                setTimeout(() => {
+                    this.currentChatId = `${this.chatsObj.chats[0].type}-${this.chatsObj.chats[0].id}`
+                    console.log(this.currentChatId);
+                }, 100)
+            }    
         }
-    },
-    mounted() {
-        setTimeout(() => {
-            this.currentChatId = this.chatsObj.chats[0].id
-        }, 250)
     }
 }
 </script>

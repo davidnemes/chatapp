@@ -56,7 +56,8 @@ export default {
             // an error occured when i did it like --> currentMessages = [] and chats = []
             // the outer object is needed for asynchronous mutation
             currentMessages: {
-                messages: []
+                messages: [],
+                nomessage: false
             },
             chatsObj: {
                 chats: [],
@@ -70,7 +71,7 @@ export default {
             },
 
             // cache for messages
-            messages: {}
+            messages: {},
         }
     },
     computed: {
@@ -92,6 +93,7 @@ export default {
             localStorage.clear()
             window.location.href = "/"
         },
+
         async loadChats() {
             let data = (await this.axios("/api/chats/"+ this.user.userId)).data
             if (!data) { return false }
@@ -100,19 +102,50 @@ export default {
             this.currentChat.id = data.chats[0].id
 
             this.chatsObj.chats = data.chats
+            this.$refs.chats.selectFirst()
         },
+        chatChanged(to) {
+            this.currentChat.type = to.chatType
+            this.currentChat.id = to.chatId
+            this.currentMessages.nomessage = false
+
+            let cached = this.messages[this.chatName]
+            if (cached && cached.length > 0) {
+                console.log("got msgs from cache");
+                this.currentMessages.messages = cached
+                this.$refs.chatroom.scrollDown()
+            } else {
+                this.loadMessages()
+            }
+            this.chatsObj.gotNewMsg = this.chatsObj.gotNewMsg.filter(id => id != this.chatName)
+        },
+
         async loadMessages() {
             let { id, type } = this.currentChat
             let messages
             if (type == "group") {
-                messages = (await this.axios("/api/groupmessages/"+id)).data
+                let res = await this.axios("/api/messages/group/"+id)
+                if (!res.error) {
+                    messages = res.data
+                }
             } else if(type == "private") {
-                messages = (await this.axios("/api/privatemessages/"+id)).data
+                let res = await this.axios("/api/messages/private/"+id)
+                if (!res.error) {
+                    messages = res.data
+                }
             } else {
                 alert("Error at loading messages, chat type does not match")
-                return false
+                return
             }
-            if(!messages) { return false }
+            if(messages === undefined || typeof messages !== "object") return
+            // Check if theres no msg
+            if (messages.length == 0) {
+                this.currentMessages.nomessage = true
+                this.currentMessages.messages = []
+                // caching loaded messages
+                this.messages[this.chatName] = []
+                return
+            }
             let handledArr = messages.map(msgobj => {
                 let msg = {
                     userId: msgobj.userId,
@@ -131,26 +164,13 @@ export default {
             // caching loaded messages
             this.messages[this.chatName] = handledArr
         },
-
-        chatChanged(to) {
-            this.currentChat.type = to.chatType
-            this.currentChat.id = to.chatId
-
-            let cached = this.messages[this.chatName]
-            if (cached) {
-                this.currentMessages.messages = cached
-                this.$refs.chatroom.scrollDown()
-            } else {
-                this.loadMessages()
-            }
-            this.chatsObj.gotNewMsg = this.chatsObj.gotNewMsg.filter(id => id != this.chatName)
-        },
         async msgPosted(msg) {
             if (this.webSocket.readyState !== 1) {
                 alert("Connection broke with websocket")
                 location.reload()
                 return
             }
+            // send msg on ws
             let now = new Date()
             let toServer = {
                 type: "new_message",
@@ -163,8 +183,9 @@ export default {
                 date: now,
                 chatId: this.currentChat.id,
             }
-
             this.webSocket.send(JSON.stringify(toServer))
+            // check if is first msg
+            if (this.currentMessages.nomessage) this.currentMessages.nomessage = false
             // push local
             this.currentMessages.messages.push({
                 message: msg,
@@ -213,8 +234,7 @@ export default {
 
         wsOnMessage(event) {
             if (!this.isJson(event.data)) {
-                console.log("WS -> got unparseable string: ");
-                console.log(event.data);
+                console.log("WS -> got unparseable string: "+event.data);
                 return
             }
 
@@ -372,6 +392,8 @@ export default {
 
         // Load Messages
         await this.loadMessages()
+
+        // Connect WebSocket
         await this.connectWS()
     }
 }

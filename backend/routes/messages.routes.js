@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-const controller = require('../controllers/groupmessages.controller');
+const controller = require('../controllers/messages.controller');
 const authJwt = require('../middlewares/authJwt')
 
 
@@ -12,7 +12,8 @@ router.use((req, res, next) => {
     next();
 });
 
-router.get('/:groupId', [authJwt.verifyToken], controller.findAll)
+router.get('/group/:groupId', [authJwt.verifyToken], controller.groupFindAll)
+router.get('/private/:conId', [authJwt.verifyToken], controller.privateFindAll)
 
 
 module.exports = router;

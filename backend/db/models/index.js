@@ -6,6 +6,9 @@ const Sequelize = require('sequelize');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.json')[env];
+// Set storage
+// !! storage has to be set from backend in config (backend is not in the path)
+
 const db = {};
 
 let sequelize;

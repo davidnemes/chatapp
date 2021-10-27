@@ -25,7 +25,7 @@
                     <p class="meta"><time datetime="2018">00:06</time></p>
                 </div>
             </div> -->
-            <div v-if="msgObj.messages.length > 0">
+            <div v-if="msgObj.messages.length > 0 && !msgObj.nomessage">
                 <div v-for="msgGroup, index in renderMsgs" 
                     :key="index" 
                     class="media media-chat"
@@ -38,6 +38,9 @@
                         <p class="meta">{{ msgGroup.ttw }}</p>
                     </div>
                 </div>
+            </div>
+            <div v-else-if="msgObj.nomessage">
+                <div class="media media-meta-day">A chat jelenleg üres</div>
             </div>
             <div v-else>
                 <p class="alert alert-warning m-2">Loading...</p>
@@ -68,6 +71,12 @@ export default {
                 console.log("not object");
                 return []
             }
+            // Check if theres no msg
+            if (this.msgObj.nomessage) {
+                return []
+            }
+
+            // Handle messages
             let newMsgs = []
             let msgGroup = {
                 // defaults

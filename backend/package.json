@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "db_setup": "cd db && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all",
+    "db_setup": "cd db && node setup.js && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all",
     "frontend_build": "cd ../frontend && npm run build",
     "frontend_install": "cd ../frontend && npm install",
     "dev-b": "npm run frontend_build && nodemon ./bin/www",

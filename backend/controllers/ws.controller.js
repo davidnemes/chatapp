@@ -1,6 +1,6 @@
 const sanitizeHTML = require("sanitize-html")
 
-const { GroupMessage, Group, Token } = require("../db/models")
+const { GroupMessage, Group, Token, PrivateMessage, PrivateConnection } = require("../db/models")
 const { isJson } = require("./tools")
 const { userWithChats } = require("./chats.controller")
 
@@ -101,7 +101,32 @@ const newMessage = async (msg, ws, wss) => {
             }
         break;
         case "private":
-            // private msg controller
+            try {
+                await PrivateMessage.create({
+                    message: msg.message,
+                    userId: msg.userId,
+                    connectionId: msg.chatId,
+                    date: msg.date
+                })
+                await PrivateConnection.update({
+                    updatedAt: msg.date,
+                    // had to update stg else too, only updatedAt didn't work
+                    id: msg.chatId
+                }, { where: {id: msg.chatId} })
+                wss.clients.forEach(client => {
+                    // 1 is basically WebSocket.OPEN
+                    if (client == ws || client.readyState !== 1) return
+                    
+                    // check if user is a member of this group
+                    let isMember = false
+                    client.chats.forEach(chat => {
+                        if (chat.private == true && chat.id == msg.chatId) isMember = true
+                    })
+                    if (isMember) client.send(JSON.stringify(msg))
+                })
+            } catch (err) {
+                console.log("WS -> Server Error");
+            }
         break;
         default:
             console.log("An Exception was found: ");
