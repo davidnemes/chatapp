@@ -13,16 +13,26 @@
                     </div>
                     <div class="dropdown-menu dropright">
                         <h4 class="dropdown-header">{{ user.username }}</h4>
-                        <a class="dropdown-item" data-toggle="modal" data-target="#userManagement">Felhasználó kezelése</a>
+                        <a class="dropdown-item" data-toggle="modal" data-target="#userManagement">
+                            Felhasználó kezelése
+                            <i class="ml-2 fas fa-user"></i>
+                        </a>
+                        <a class="dropdown-item" @click="reqForNotis" v-if="notiDisplay">
+                            Értesítések Bekapcsolása
+                            <i class="ml-2 fas fa-bell"></i>
+                        </a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" @click="logout">Kijelentkezés</a>
+                        <a class="dropdown-item" @click="logout">
+                            Kijelentkezés
+                            <i class="ml-2 fas fa-sign-out-alt"></i>
+                        </a>
                     </div>
                 </div>
             </header>
             <Chats id="navigationChats" :chatsObj="chatsObj" @changeChat="chatChanged" ref="chats" />
         </div>
         <div id="chatroomDiv">
-            <Chatroom :msgObj="currentMessages" @postMsg="msgPosted" ref="chatroom" />
+            <Chatroom :msgObj="currentMessages" :chat="currentChat" @postMsg="msgPosted" ref="chatroom" />
         </div>
 
         <!-- Elements with changing place -->
@@ -53,6 +63,9 @@ export default {
         return {
             webSocket: null,
             cssRoot: null,
+            siteFocus: true,
+            // n as notifications
+            notis: "",
             // an error occured when i did it like --> currentMessages = [] and chats = []
             // the outer object is needed for asynchronous mutation
             currentMessages: {
@@ -67,7 +80,8 @@ export default {
 
             currentChat: {
                 type: "group",
-                id: 1
+                id: 1,
+                title: "Public",
             },
 
             // cache for messages
@@ -85,6 +99,13 @@ export default {
         chatName() {
             let { id, type } = this.currentChat
             return `${type}-${id}`
+        },
+        isHttps() {
+            let isLocalhost = document.location.hostname == "localhost" || document.location.hostname == "127.0.0.1"
+            return document.location.protocol == "https:" || isLocalhost
+        },
+        notiDisplay() {
+            return this.isHttps && this.notis == 'default'
         }
     },
     methods: {
@@ -100,6 +121,7 @@ export default {
             
             this.currentChat.type = data.chats[0].type
             this.currentChat.id = data.chats[0].id
+            this.currentChat.title = data.chats[0].title
 
             this.chatsObj.chats = data.chats
             this.$refs.chats.selectFirst()
@@ -107,11 +129,12 @@ export default {
         chatChanged(to) {
             this.currentChat.type = to.chatType
             this.currentChat.id = to.chatId
+            let chatIndex = this.chatsObj.chats.findIndex(k => k.id == to.chatId)
+            this.currentChat.title = this.chatsObj.chats[chatIndex].title
             this.currentMessages.nomessage = false
 
             let cached = this.messages[this.chatName]
             if (cached && cached.length > 0) {
-                console.log("got msgs from cache");
                 this.currentMessages.messages = cached
                 this.$refs.chatroom.scrollDown()
             } else {
@@ -182,6 +205,7 @@ export default {
                 picExt: this.user.picExt,
                 date: now,
                 chatId: this.currentChat.id,
+                chatTitle: this.currentChat.type == "group" ? this.currentChat.title : this.user.username,
             }
             this.webSocket.send(JSON.stringify(toServer))
             // check if is first msg
@@ -231,7 +255,6 @@ export default {
             }
             this.webSocket = webSocket
         },
-
         wsOnMessage(event) {
             if (!this.isJson(event.data)) {
                 console.log("WS -> got unparseable string: "+event.data);
@@ -240,6 +263,7 @@ export default {
 
             let msg = JSON.parse(event.data)
             if (msg.type == "new_message") {
+
                 let objToPush = {
                     userId: msg.userId,
                     username: msg.username,
@@ -272,8 +296,12 @@ export default {
                     let chatAtIndex = this.chatsObj.chats.splice(index, 1)[0]
                     this.chatsObj.chats.unshift(chatAtIndex)
                 }
+
+                // send the right notification
+                this.sendNoti(msg)
+
             } else {
-                console.log("WS -> got Something different");
+                console.log("WS -> got Something different:");
                 console.log(msg);
             }
             
@@ -335,6 +363,68 @@ export default {
             }
         },
 
+        // Notifications
+        setNotis() {
+            onfocus = () => {
+                this.siteFocus = true
+                let titleArr = document.title.split(" ")
+                if (titleArr.length > 1) {
+                    document.title = titleArr[1]
+                }
+            },
+            onblur = () => {
+                this.siteFocus = false
+            }
+
+            if (!this.isHttps) {
+                console.log("Az Értesítések nem elérhetők nem HTTPS oldalon");
+            }
+
+            try {
+                this.notis = Notification.permission
+            } catch (error) {
+                console.log("A böngésződben nem elérhetőek az értesítések");
+            }
+        },
+        reqForNotis() {
+            if (!this.isHttps) return
+
+            if (this.notisArePromises) {
+                Notification.requestPermission().then(res => {
+                    console.log(res);
+                    // have to reload because of vue bug: this.notis is not reachable
+                    location.reload()
+                })
+            } else {
+                Notification.requestPermission(res => {
+                    console.log(res);
+                    location.reload()
+                })
+            }
+        },
+        sendNoti(msg) {
+            if (this.siteFocus) {
+                return
+            }
+
+            let hasNoti = document.title.split(" ").length == 2
+            if (!hasNoti) document.title = "(!) " + document.title
+            if (this.notis == "granted") {
+                let body = (msg.to == "group" ? "Ide: " : "Tőle: ") + msg.chatTitle
+                let noti = new Notification("Új üzenet", {
+                    body: body,
+                    icon: "/favicon.ico"
+                })
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible') {
+                        // The tab has become visible so clear noti
+                        noti.close();
+                    }
+                });
+            }
+        },
+        
+
         // Functions with CSS variables
         getCssVarValue(varName) {
             var rs = getComputedStyle(this.cssRoot);
@@ -364,37 +454,52 @@ export default {
             } catch (err) {
                 return false
             }
+        },
+        notisArePromises() {
+            try {
+                Notification.requestPermission().then();
+            } catch (err) {
+                return false
+            }
+            return true
+        },
+
+        async createdAsync() {
+            // Check if user is logged in
+            let sstoken = sessionStorage.getItem("x-access-token")
+            if(!sstoken) {
+                let lsuser = localStorage.getItem("user")
+                if(lsuser) {
+                    // user hit remember me
+                    let user = JSON.parse(lsuser)
+                    await this.newAccessToken(user)
+                } else {
+                    // the flow never should get here btw
+                    this.$router.push("/login")
+                }
+            }
+
+            // Set access-token expiration
+            this.setAccTokenExpire()
+
+            // Set cssRoot and height
+            this.setCSSandHeights()
+
+            // Load Chats
+            await this.loadChats()
+
+            // Load Messages
+            await this.loadMessages()
+
+            // Connect WebSocket
+            await this.connectWS()
         }
     },
-    async created() {
-        // Check if user is logged in
-        let sstoken = sessionStorage.getItem("x-access-token")
-        if(!sstoken) {
-            let lsuser = localStorage.getItem("user")
-            if(lsuser) {
-                // user hit remember me
-                let user = JSON.parse(lsuser)
-                await this.newAccessToken(user)
-            } else {
-                // the flow never should get here btw
-                this.$router.push("/login")
-            }
-        }
+    created() {
+        // Set Notifications
+        this.setNotis()
 
-        // Set access-token expiration
-        this.setAccTokenExpire()
-
-        // Set cssRoot and height
-        this.setCSSandHeights()
-
-        // Load Chats
-        await this.loadChats()
-
-        // Load Messages
-        await this.loadMessages()
-
-        // Connect WebSocket
-        await this.connectWS()
+        this.createdAsync()
     }
 }
 </script>

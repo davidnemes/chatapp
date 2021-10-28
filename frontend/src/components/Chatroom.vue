@@ -2,9 +2,9 @@
     <div class="card card-bordered">
         <div class="card-header">
             <h4 class="card-title">
-                <strong>Chat</strong>
+                <strong>{{ chat.title }}</strong>
             </h4>
-            <button class="btn btn-xs btn-secondary" href="#" data-abc="true">Részletek</button>
+            <button class="btn btn-xs btn-secondary">Részletek</button>
         </div>
         <div class="ps-container ps-theme-default ps-active-y" id="chat-content">
             <!-- <div class="media media-chat">
@@ -26,6 +26,7 @@
                 </div>
             </div> -->
             <div v-if="msgObj.messages.length > 0 && !msgObj.nomessage">
+                <div class="media media-meta-day" v-if="chatOverFlow">Elértél a chat végére</div>
                 <div v-for="msgGroup, index in renderMsgs" 
                     :key="index" 
                     class="media media-chat"
@@ -58,6 +59,7 @@ export default {
     name: "Chatroom",
     props: {
         msgObj: Object,
+        chat: Object,
     },
     data() {
         return {
@@ -125,6 +127,11 @@ export default {
             newMsgs.push(msgGroup)
 
             return newMsgs
+        },
+        chatOverFlow() {
+            let el = this.jQuery("#chat-content")
+            try { el = el[0] } catch(err) {"error"}
+            return this.checkOverFlow(el)
         }
     },
     methods: {
@@ -144,7 +151,7 @@ export default {
             setTimeout(() => {
                 let scroll = this.jQuery("#chat-content").prop("scrollHeight")
                 this.jQuery("#chat-content")[0].scrollTop = scroll
-            }, 75)
+            }, 25)
         },
         timeToWrite(date) {
             let now = new Date()
@@ -161,7 +168,21 @@ export default {
                 default:
                     return `${date.getFullYear()}. ${month}`
             }
-        }
+        },
+        // pasted helper
+        checkOverFlow(el) {
+                var curOverf = el.style.overflow;
+                  
+                if ( !curOverf || curOverf === "visible" )
+                    el.style.overflow = "hidden";
+                  
+                var isOverflowing = el.clientWidth < el.scrollWidth
+                    || el.clientHeight < el.scrollHeight;
+                  
+                el.style.overflow = curOverf;
+                  
+                return isOverflowing;
+            }
     },
     mounted() {
         this.scrollDown()

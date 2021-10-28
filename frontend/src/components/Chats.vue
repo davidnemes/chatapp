@@ -30,7 +30,6 @@ export default {
     data() {
         return {
             currentChatId: null,
-            first: true
         }
     },
     computed: {
@@ -59,15 +58,11 @@ export default {
             }
             this.$emit("changeChat", toParentComp)
             this.currentChatId = t.id
-            console.log("new current chat with id: ");
-            console.log(this.currentChatId);
         },
         selectFirst() {
-            if (this.first) {
-                this.first = false
+            if (this.currentChatId === null) {
                 setTimeout(() => {
                     this.currentChatId = `${this.chatsObj.chats[0].type}-${this.chatsObj.chats[0].id}`
-                    console.log(this.currentChatId);
                 }, 100)
             }    
         }
