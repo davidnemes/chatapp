@@ -64,7 +64,6 @@ export default {
             webSocket: null,
             cssRoot: null,
             siteFocus: true,
-            // n as notifications
             notis: "",
             // an error occured when i did it like --> currentMessages = [] and chats = []
             // the outer object is needed for asynchronous mutation
@@ -189,7 +188,7 @@ export default {
         },
         async msgPosted(msg) {
             if (this.webSocket.readyState !== 1) {
-                alert("Connection broke with websocket")
+                alert("A kapcsolódás megszakadt. Az oldal újra lesz töltve.")
                 location.reload()
                 return
             }
@@ -237,22 +236,20 @@ export default {
                 alert("Error at starting WebSocket")
                 return
             }
-
+            
             const webSocket = new WebSocket(`ws://${location.host}/?token=${res.data.token}&id=${this.user.userId}`);
             webSocket.onerror = (err) => {
                 if(err.eventPhase === 2) {
                     // Maybe the LanIP was set poorly.
-                    alert("Error at WS connection.")
+                    console.log("WS -> Error at WS connection.")
                 } else {
-                    alert("Error at WS.")
+                    console.log("WS -> Error at WS.")
                 }
             }
             webSocket.onopen = () => {
                 console.log("WS -> ws opened");
             }
-            webSocket.onmessage = (event) => {
-                this.wsOnMessage(event)
-            }
+            webSocket.onmessage = this.wsOnMessage
             this.webSocket = webSocket
         },
         wsOnMessage(event) {
@@ -328,7 +325,7 @@ export default {
             sessionStorage.setItem("user", JSON.stringify(user))
         },
         setAccTokenExpire() {
-            let time = parseInt(sessionStorage.getItem("x-acc-expiration")) - Date.now() - (5*60*1000)
+            let time = parseInt(sessionStorage.getItem("x-acc-expiration")) - (Date.now() + (5*60*1000))
             if (time < 0) {
                 if (localStorage.getItem("user")) {
                     sessionStorage.clear()
@@ -365,21 +362,30 @@ export default {
 
         // Notifications
         setNotis() {
+            // Set focus and blur listeners
             onfocus = () => {
-                this.siteFocus = true
+                // remove (!) from title if it's there
                 let titleArr = document.title.split(" ")
-                if (titleArr.length > 1) {
-                    document.title = titleArr[1]
+                if (titleArr.length > 1) document.title = titleArr[1]
+
+                // reconnect ws if it's broken
+                if (this.webSocket.readyState !== 1) {
+                    console.log("WS -> reconnecting...");
+                    this.webSocket.close()
+                    this.webSocket = null
+                    this.connectWS()
                 }
+
+                this.siteFocus = true
             },
             onblur = () => {
                 this.siteFocus = false
             }
 
+            // Set notifications
             if (!this.isHttps) {
                 console.log("Az Értesítések nem elérhetők nem HTTPS oldalon");
             }
-
             try {
                 this.notis = Notification.permission
             } catch (error) {
@@ -464,6 +470,7 @@ export default {
             return true
         },
 
+        // Custom function to leave created synchronous
         async createdAsync() {
             // Check if user is logged in
             let sstoken = sessionStorage.getItem("x-access-token")
@@ -482,9 +489,6 @@ export default {
             // Set access-token expiration
             this.setAccTokenExpire()
 
-            // Set cssRoot and height
-            this.setCSSandHeights()
-
             // Load Chats
             await this.loadChats()
 
@@ -495,10 +499,16 @@ export default {
             await this.connectWS()
         }
     },
+
     created() {
-        // Set Notifications
+        // Set Notifications and Focus & Blur handlers
         this.setNotis()
 
+        // Set cssRoot and inner height
+        this.setCSSandHeights()
+        onresize = this.setCSSandHeights
+
+        // The rest
         this.createdAsync()
     }
 }

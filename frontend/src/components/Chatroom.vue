@@ -26,7 +26,7 @@
                 </div>
             </div> -->
             <div v-if="msgObj.messages.length > 0 && !msgObj.nomessage">
-                <div class="media media-meta-day" v-if="chatOverFlow">Elértél a chat végére</div>
+                <div class="media media-meta-day">Elértél a chat végére</div>
                 <div v-for="msgGroup, index in renderMsgs" 
                     :key="index" 
                     class="media media-chat"
@@ -128,11 +128,6 @@ export default {
 
             return newMsgs
         },
-        chatOverFlow() {
-            let el = this.jQuery("#chat-content")
-            try { el = el[0] } catch(err) {"error"}
-            return this.checkOverFlow(el)
-        }
     },
     methods: {
         postMsg(event) {
@@ -172,15 +167,9 @@ export default {
         // pasted helper
         checkOverFlow(el) {
                 var curOverf = el.style.overflow;
-                  
-                if ( !curOverf || curOverf === "visible" )
-                    el.style.overflow = "hidden";
-                  
-                var isOverflowing = el.clientWidth < el.scrollWidth
-                    || el.clientHeight < el.scrollHeight;
-                  
+                if ( !curOverf || curOverf === "visible" || curOverf === "" ) el.style.overflow = "hidden";
+                var isOverflowing = el.clientWidth < el.scrollWidth || el.clientHeight < el.scrollHeight;
                 el.style.overflow = curOverf;
-                  
                 return isOverflowing;
             }
     },
