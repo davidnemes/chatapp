@@ -1,5 +1,5 @@
-function genToken() {
-    var length = 10,
+function genToken(strLength) {
+    var length = parseInt(strLength) || 10,
     // you shouldn't put the " charachter in
         charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
         retVal = "";

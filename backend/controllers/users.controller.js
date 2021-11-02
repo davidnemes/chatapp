@@ -63,7 +63,7 @@ const login = async (req, res) => {
             userId: user.id,
             role: user.Role,
             username: user.username,
-            picExt: user.picExt
+            picName: user.picName
         },
         rememberToken: rmToken
     })
@@ -139,7 +139,7 @@ const signup = async (req, res) => {
             userId: userToSend.id,
             role: userToSend.Role,
             username: user.username,
-            picExt: userToSend.picExt
+            picName: userToSend.picName
         },
         rememberToken: rmToken
     })
@@ -231,10 +231,10 @@ const changeProfpic = async (req, res) => {
         if (!user) {
             return res.status(400).json({ message: "User not found" })
         }
-        if (user.picExt) {
+        if (user.picName) {
             renameSync(
-                `public/images/profpic-userId-${req.userId}.${user.picExt}`, 
-                `public/deleted/profpic-userId-${req.userId}_${num}.${user.picExt}`)
+                `public/images/${user.picName}`, 
+                `public/deleted/profpic-userId-${req.userId}_${num}.${user.picName.split(".")[1]}`)
         }
     } catch (error) {
         return res.status(500).json({ message: "Server error" })
@@ -243,12 +243,12 @@ const changeProfpic = async (req, res) => {
     // store new pic
 
     let extension = file.originalname.split(".").pop()
-    let filename = `profpic-userId-${req.userId}.${extension}`
+    let filename = `profpic-${genToken()}.${extension}`
     let newpath = "public/images/" + filename
     try {
         renameSync(file.path, newpath)
         await User.update({
-            picExt: extension
+            picName: filename
         }, { where: {id: req.userId}})
     } catch (err) {
         return res.status(500).json({ message: "Server error" })
@@ -256,7 +256,7 @@ const changeProfpic = async (req, res) => {
 
     return res.status(200).json({
         updated: true,
-        newExt: extension
+        newName: filename
     })
 }
 

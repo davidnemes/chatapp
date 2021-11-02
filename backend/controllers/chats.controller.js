@@ -38,7 +38,7 @@ const userWithChats = async (id) => {
         let otherId = id == cons[i].userId_1 ? cons[i].userId_2 : cons[i].userId_1
         let otherUser = await User.findOne({
             where: { id: otherId },
-            attributes: ["id", "username", "picExt"]
+            attributes: ["id", "username", "picName"]
         })
         cons[i].otherUser = otherUser
     }
@@ -63,7 +63,7 @@ const userWithChats = async (id) => {
             type: "private",
             id: con.id,
             title: con.otherUser.username,
-            picExt: con.otherUser.picExt,
+            picName: con.otherUser.picName,
             otherUserId: con.otherUser.id,
             updatedAt: con.updatedAt
         })

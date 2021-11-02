@@ -9,7 +9,7 @@
                 <div class="dropdown">
                     <div @click="toProfile" id="profileDiv" class="p-2" data-toggle="dropdown">
                         <span class="mr-2">{{ user.username }}</span>
-                        <img :src="`/images/profpic-userId-${user.userId}.${user.picExt}`" alt="..." class="avatar" onerror="this.src='/images/profpic-default.jpg'">
+                        <img :src="`/images/${user.picName}`" alt="..." class="avatar" onerror="this.src='/images/profpic-default.jpg'">
                     </div>
                     <div class="dropdown-menu dropright">
                         <h4 class="dropdown-header">{{ user.username }}</h4>
@@ -126,14 +126,21 @@ export default {
             this.$refs.chats.selectFirst()
         },
         chatChanged(to) {
+            // chhange chat
             this.currentChat.type = to.chatType
             this.currentChat.id = to.chatId
-            let chatIndex = this.chatsObj.chats.findIndex(k => k.id == to.chatId)
+            let chatIndex = this.chatsObj.chats.findIndex(k => {
+                return k.id == to.chatId && k.type == to.chatType
+            })
             this.currentChat.title = this.chatsObj.chats[chatIndex].title
             this.currentMessages.nomessage = false
 
+            // load chat msgs
             let cached = this.messages[this.chatName]
-            if (cached && cached.length > 0) {
+            if (cached !== undefined && cached.length == 0) {
+                this.currentMessages.nomessage = true
+                this.currentMessages.messages = []
+            } else if (cached !== undefined && cached.length > 0) {
                 this.currentMessages.messages = cached
                 this.$refs.chatroom.scrollDown()
             } else {
@@ -176,7 +183,7 @@ export default {
                     // create self
                     self: msgobj.userId == this.user.userId,
                     username: msgobj.User.username,
-                    picExt: msgobj.User.picExt
+                    picName: msgobj.User.picName
                 }
                 return msg
             });
@@ -201,7 +208,7 @@ export default {
                 message: msg,
                 userId: this.user.userId,
                 username: this.user.username,
-                picExt: this.user.picExt,
+                picName: this.user.picName,
                 date: now,
                 chatId: this.currentChat.id,
                 chatTitle: this.currentChat.type == "group" ? this.currentChat.title : this.user.username,
@@ -214,7 +221,7 @@ export default {
                 message: msg,
                 userId: this.user.userId,
                 username: this.user.username,
-                picExt: this.user.picExt,
+                picName: this.user.picName,
                 date: now,
                 self: true,
             })
@@ -259,49 +266,55 @@ export default {
             }
 
             let msg = JSON.parse(event.data)
-            if (msg.type == "new_message") {
-
-                let objToPush = {
-                    userId: msg.userId,
-                    username: msg.username,
-                    picExt: msg.picExt,
-                    message: msg.message,
-                    date: new Date(msg.date),
-                    // create self
-                    self: msg.userId == this.user.userId,
-                }
-
-                if (this.currentChat.type == msg.to && this.currentChat.id == msg.chatId) {
-                    this.currentMessages.messages.push(objToPush)
-                    this.$refs.chatroom.scrollDown()
-                } else {
-                    // received message not for this chatroom
-                    let forChat = `${msg.to}-${msg.chatId}`
-                    this.chatsObj.gotNewMsg.push(forChat)
-                    let cached = this.messages[forChat]
-                    if (cached) {
-                        cached.push(objToPush)
-                    }
-                }
-                
-                // move chat to top
-                let index = this.chatsObj.chats.findIndex(chat => {
-                    return msg.to == chat.type && msg.chatId == chat.id
-                })
-                if (index != 0 && index != -1) {
-                    // splice takes out the chat from chats
-                    let chatAtIndex = this.chatsObj.chats.splice(index, 1)[0]
-                    this.chatsObj.chats.unshift(chatAtIndex)
-                }
-
-                // send the right notification
-                this.sendNoti(msg)
-
-            } else {
-                console.log("WS -> got Something different:");
-                console.log(msg);
+            switch(msg.type) {
+                case "new_message":
+                    this.wsNewMsg(msg)
+                    break
+                case "got_attack":
+                    this.logout()
+                    break
+                default:
+                    console.log("WS -> got something different:");
+                    console.log(msg);
             }
             
+        },
+        wsNewMsg(msg) {
+            let objToPush = {
+                userId: msg.userId,
+                username: msg.username,
+                picName: msg.picName,
+                message: msg.message,
+                date: new Date(msg.date),
+                // create self
+                self: msg.userId == this.user.userId,
+            }
+
+            if (this.currentChat.type == msg.to && this.currentChat.id == msg.chatId) {
+                this.currentMessages.messages.push(objToPush)
+                this.$refs.chatroom.scrollDown()
+            } else {
+                // received message not for this chatroom
+                let forChat = `${msg.to}-${msg.chatId}`
+                this.chatsObj.gotNewMsg.push(forChat)
+                let cached = this.messages[forChat]
+                if (cached) {
+                    cached.push(objToPush)
+                }
+            }
+            
+            // move chat to top
+            let index = this.chatsObj.chats.findIndex(chat => {
+                return msg.to == chat.type && msg.chatId == chat.id
+            })
+            if (index != 0 && index != -1) {
+                // splice takes out the chat from chats
+                let chatAtIndex = this.chatsObj.chats.splice(index, 1)[0]
+                this.chatsObj.chats.unshift(chatAtIndex)
+            }
+
+            // send the right notification
+            this.sendNoti(msg)
         },
 
         // Accesstoken expiration
@@ -409,12 +422,13 @@ export default {
             }
         },
         sendNoti(msg) {
-            if (this.siteFocus) {
+            if (this.siteFocus || msg.userId == this.user.userId) {
                 return
             }
 
             let hasNoti = document.title.split(" ").length == 2
             if (!hasNoti) document.title = "(!) " + document.title
+
             if (this.notis == "granted") {
                 let body = (msg.to == "group" ? "Ide: " : "Tőle: ") + msg.chatTitle
                 let noti = new Notification("Új üzenet", {

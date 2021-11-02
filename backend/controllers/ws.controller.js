@@ -38,8 +38,31 @@ const wsController = async (ws, wss, req) => {
     ws.userId = userId
     ws.chats = (await userWithChats(userId)).chats
 
+    // Prevent DoS attack
+    ws.dos = {
+        maxPerSec: 10,
+        inOneSec: 0,
+        lastMsg: Math.floor(Date.now() / 1000)
+    }
+
     // Listening for messages
     ws.on("message", (data) => {
+        // Prevent DoS attack
+        let now = Math.floor(Date.now() / 1000)
+        if (ws.dos.lastMsg === now) {
+            ws.dos.inOneSec++
+        } else {
+            ws.dos.inOneSec = 0
+            ws.dos.lastMsg = now
+        }
+
+        if (ws.dos.inOneSec > ws.dos.maxPerSec) {
+            console.log("WS -> someone flooded websocket, userId: " + ws.userId);
+            ws.send(JSON.stringify({ type: "got_attack" }))
+            return ws.terminate()
+        }
+        
+        // Handle Message
         let msgString = data.toString()
 
         if(isJson(msgString)) {
@@ -53,8 +76,8 @@ const wsController = async (ws, wss, req) => {
                     console.log(msg);
             }
         } else {
-            console.log("WS -> got a string message from a connection: ");
-            console.log(msg);
+            console.log("WS -> got an unparseable string from a connection: ");
+            console.log(msgString);
         }
     })
 }

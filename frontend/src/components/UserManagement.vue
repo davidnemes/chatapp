@@ -211,7 +211,7 @@ export default {
             } else if(res.data.updated) {
                 this.success = "A profilképed be lett állítva."
                 let newuser = this.user
-                newuser.picExt = res.data.newExt
+                newuser.picName = res.data.newName
                 sessionStorage.setItem("user", JSON.stringify(newuser))
             } else {
                 this.alert = "An exception was found"

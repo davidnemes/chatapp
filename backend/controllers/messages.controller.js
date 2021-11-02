@@ -7,7 +7,7 @@ const groupFindAll = async (req, res) => {
             where: { groupId: id },
             include: {
                 model: User,
-                attributes: ["username", "id", "picExt"],
+                attributes: ["username", "id", "picName"],
                 as: "User"
             }
         })
@@ -26,7 +26,7 @@ const privateFindAll = async (req, res) => {
             where: { connectionId: id },
             include: {
                 model: User,
-                attributes: ["username", "id", "picExt"],
+                attributes: ["username", "id", "picName"],
                 as: "User"
             }
         })

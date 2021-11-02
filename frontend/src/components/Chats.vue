@@ -8,7 +8,7 @@
                 :id="chat.elId"
                 @click="toChat">
                 <img v-if="chat.group" :src="`/images/grouppic-default.png`" data-child="true" alt="..." class="avatar chatPic" onerror="this.src='/images/grouppic-default.jpg'">
-                <img v-if="chat.private" :src="`/images/profpic-userId-${chat.otherUserId}.${chat.picExt}`" data-child="true" alt="..." class="avatar chatPic" onerror="this.src='/images/profpic-default.jpg'">
+                <img v-if="chat.private" :src="`/images/${chat.picName}`" data-child="true" alt="..." class="avatar chatPic" onerror="this.src='/images/profpic-default.jpg'">
                 <h6 class="m-0" :class="chat.font_weight" data-child="true">
                     {{ chat.title }}
                     <i v-if="chat.font_weight == 'font-weight-bold'" class="fas fa-exclamation-circle ml-3"></i>

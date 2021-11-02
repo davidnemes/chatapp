@@ -14,7 +14,10 @@ try {
             return
         }
         changed = true
-        let newStorage = path.join(__dirname, config[key].storage)
+
+        let dirs = config[key].storage.split("/")
+        let filename = dirs[dirs.length-1]
+        let newStorage = path.join(__dirname, filename)
         config[key].storage = newStorage
     })
 

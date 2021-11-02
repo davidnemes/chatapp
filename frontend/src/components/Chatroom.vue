@@ -100,7 +100,7 @@ export default {
                         // set current
                         msgGroup = { msgs: [] }
                         msgGroup.self = msg.self
-                        msgGroup.imgSrc = `/images/profpic-userId-${msg.userId}.${msg.picExt}`
+                        msgGroup.imgSrc = `/images/${msg.picName}`
                         msgGroup.msgs.push(msg.message)
                         msgGroup.ttw = this.timeToWrite(msg.date)
                         msgGroup.un = msg.username
@@ -114,7 +114,7 @@ export default {
                         msgGroup = { msgs: [] }
                     }
                     msgGroup.self = msg.self
-                    msgGroup.imgSrc = `/images/profpic-userId-${msg.userId}.${msg.picExt}`
+                    msgGroup.imgSrc = `/images/${msg.picName}`
                     msgGroup.msgs.push(msg.message)
                     msgGroup.ttw = this.timeToWrite(msg.date)
                     msgGroup.un = msg.username
