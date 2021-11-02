@@ -81,6 +81,7 @@ export default {
                 type: "group",
                 id: 1,
                 title: "Public",
+                picName: `/images/grouppic-default.png`
             },
 
             // cache for messages
@@ -133,6 +134,7 @@ export default {
                 return k.id == to.chatId && k.type == to.chatType
             })
             this.currentChat.title = this.chatsObj.chats[chatIndex].title
+            this.currentChat.picName = this.chatsObj.chats[chatIndex].picName
             this.currentMessages.nomessage = false
 
             // load chat msgs
@@ -462,7 +464,7 @@ export default {
         setCSSandHeights() {
             this.cssRoot = document.querySelector(':root')
             this.setCssVarValue("--innerHeight", window.innerHeight)
-            this.setCssVarValue("--chatRoomHeight", window.innerHeight - 140)
+            this.setCssVarValue("--chatRoomHeight", window.innerHeight - 120)
             this.setCssVarValue("--appMT", 0)
         },
 

@@ -81,17 +81,19 @@ export default {
     cursor: pointer;
 }
 
-.chatPic {
-    width: 50px !important;
-    height: 50px !important;
-    line-height: 50px !important;
-}
-
 .activeChat {
     background-color: rgb(62, 206, 199);
 }
 
 ::-webkit-scrollbar-track {
     background: #ccebff;
+}
+</style>
+
+<style>
+.chatPic {
+    width: 50px !important;
+    height: 50px !important;
+    line-height: 50px !important;
 }
 </style>

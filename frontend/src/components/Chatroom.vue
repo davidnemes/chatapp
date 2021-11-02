@@ -1,8 +1,10 @@
 <template>
     <div class="card card-bordered">
         <div class="card-header">
-            <h4 class="card-title">
-                <strong>{{ chat.title }}</strong>
+            <h4 class="card-title m-0">
+                <img :src="chat.type == 'group' ? `/images/grouppic-default.png` : `/images/${chat.picName}`" alt="..." class="avatar chatPic" onerror="this.src='/images/profpic-default.jpg'">
+                
+                <span class="ml-2">{{ chat.title }}</span>
             </h4>
             <button class="btn btn-xs btn-secondary">Részletek</button>
         </div>

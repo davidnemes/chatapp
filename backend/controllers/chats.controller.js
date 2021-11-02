@@ -64,7 +64,6 @@ const userWithChats = async (id) => {
             id: con.id,
             title: con.otherUser.username,
             picName: con.otherUser.picName,
-            otherUserId: con.otherUser.id,
             updatedAt: con.updatedAt
         })
     })
