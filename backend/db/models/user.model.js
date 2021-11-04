@@ -10,11 +10,11 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      this.belongsTo(models.Role, {
-        foreignKey: "roleId",
-      })
       this.belongsToMany(models.Group, {
         through: models.GroupMember
+      })
+      this.hasMany(models.GroupMember, {
+        as: "Membership"
       })
       this.hasMany(models.GroupMessage, {
         as: "Messages"
@@ -24,7 +24,6 @@ module.exports = (sequelize, DataTypes) => {
   User.init({
     username: DataTypes.STRING,
     password: DataTypes.STRING,
-    roleId: DataTypes.INTEGER,
     deleted: DataTypes.BOOLEAN,
     picName: DataTypes.STRING
   }, {

@@ -14,7 +14,6 @@ router.use((req, res, next) => {
     next();
 });
 
-// router.get('/', controller.getHtml);
 router.get('/', [authJwt.verifyToken], controller.findAll)
 
 router.post('/login', controller.login)

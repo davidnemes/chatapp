@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const { renameSync } = require("fs")
 
-const { User, Role, Token, GroupMember } = require("../db/models");
+const { User, Token, GroupMember } = require("../db/models");
 const { genToken, random } = require("./tools")
 
 const login = async (req, res) => {
@@ -18,11 +18,6 @@ const login = async (req, res) => {
             where: {
                 username: req.body.username
             },
-            include: [{
-                model: Role,
-                attributes: ["role", "weight"],
-                as: "Role"
-            }]
         })
     } catch (err) {
         return res.status(500).json({ message: "Server error" })
@@ -61,7 +56,6 @@ const login = async (req, res) => {
         expiration: Date.now() + (config.jwtExpiration*1000),
         user: {
             userId: user.id,
-            role: user.Role,
             username: user.username,
             picName: user.picName
         },
@@ -92,13 +86,13 @@ const signup = async (req, res) => {
         user = await User.create({
             username: un,
             password: encPw,
-            roleId: 1,
             createdAt: now,
             updatedAt: now
         })
         await GroupMember.create({
             UserId: user.id,
-            GroupId: 1
+            GroupId: 1,
+            roleId: 1
         })
     } catch (err) {
         console.log(err);
@@ -121,11 +115,6 @@ const signup = async (req, res) => {
         where: {
             username: user.username
         },
-        include: [{
-            model: Role,
-            attributes: ["role", "weight"],
-            as: "Role"
-        }]
     })
 
     const token = jwt.sign({ id: user.id }, config.secret, {
@@ -137,7 +126,6 @@ const signup = async (req, res) => {
         expiration: Date.now() + (config.jwtExpiration*1000),
         user: {
             userId: userToSend.id,
-            role: userToSend.Role,
             username: user.username,
             picName: userToSend.picName
         },
@@ -149,11 +137,6 @@ const findAll = async (req, res) => {
     try {
         let users = await User.findAll({
             attributes: ["id", "username"],
-            include: {
-                model: Role,
-                attributes: ["role", "weight"],
-                as: "Role"
-            }
         })
         res.status(200).json(users)
     } catch (err) {

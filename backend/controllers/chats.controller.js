@@ -1,5 +1,5 @@
 
-const { User, Group, PrivateConnection } = require("../db/models")
+const { User, Group, GroupMember, Role, PrivateConnection } = require("../db/models")
 const { Op } = require("sequelize")
 
 
@@ -19,9 +19,21 @@ const userWithChats = async (id) => {
         where: { id: id },
         attributes: ["id"],
         include: {
-            model: Group,
-            attributes: ["id", "title", "updatedAt"],
-        },
+            model: GroupMember,
+            as: "Membership",
+            attributes: ["id", "UserId", "GroupId"],
+            include: [
+                {
+                    model: Group,
+                    as: "Group",
+                    attributes: ["id", "title", "updatedAt"],
+                },{
+                    model: Role,
+                    as: "Role",
+                    attributes: ["role", "weight"]
+                }
+            ]
+        }
     })
 
     // get private connections
@@ -48,13 +60,17 @@ const userWithChats = async (id) => {
         userId: userWG.id,
         chats: []
     }
-    userWG.Groups.forEach(group => {
+    userWG.Membership.forEach(ms => {
         toReturn.chats.push({
             group: true,
             type: "group",
-            id: group.id,
-            title: group.title,
-            updatedAt: group.updatedAt
+            id: ms.Group.id,
+            title: ms.Group.title,
+            updatedAt: ms.Group.updatedAt,
+            userRole: {
+                role: ms.Role.role,
+                weight: ms.Role.weight,
+            }
         })
     })
     cons.forEach(con => {

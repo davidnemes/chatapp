@@ -34,7 +34,6 @@ const wsController = async (ws, wss, req) => {
 
     // New connection
     console.log('WS -> A new client Connected!');
-    ws.send('Welcome New Client!');
     ws.userId = userId
     ws.chats = (await userWithChats(userId)).chats
 
@@ -152,7 +151,7 @@ const newMessage = async (msg, ws, wss) => {
             }
         break;
         default:
-            console.log("An Exception was found: ");
+            console.log("WS -> An Exception was found: ");
             console.log(msg);
     }
 }

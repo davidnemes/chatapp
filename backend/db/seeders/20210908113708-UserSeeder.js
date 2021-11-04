@@ -7,24 +7,21 @@ module.exports = {
     
     let encryptedPasswordDavid = await bcrypt.hash('isadmin', 10)
     let encryptedPasswordGuest = await bcrypt.hash('isguest', 10)
-    let encryptedPasswordModerator = await bcrypt.hash('moderator', 10)
+    let encryptedPasswordFriend = await bcrypt.hash('isfriend', 10)
 
     await queryInterface.bulkInsert('users', [{
       username: 'david',
       password: encryptedPasswordDavid,
-      roleId: 3,
       createdAt: new Date(),
       updatedAt: new Date()
     }, {
       username: 'guest',
       password: encryptedPasswordGuest,
-      roleId: 1,
       createdAt: new Date(),
       updatedAt: new Date()
     }, {
-      username: 'modi',
-      password: encryptedPasswordModerator,
-      roleId: 2,
+      username: 'friend',
+      password: encryptedPasswordFriend,
       createdAt: new Date(),
       updatedAt: new Date()
     }], {})

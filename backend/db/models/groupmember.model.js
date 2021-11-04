@@ -12,11 +12,21 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       // this table is supposed to be a pivot
+      this.belongsTo(models.User, {
+        foreignKey: "UserId"
+      })
+      this.belongsTo(models.Group, {
+        foreignKey: "GroupId"
+      })
+      this.belongsTo(models.Role, {
+        foreignKey: "RoleId"
+      })
     }
   };
   GroupMember.init({
     GroupId: DataTypes.INTEGER,
     UserId: DataTypes.INTEGER,
+    RoleId: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'GroupMember',

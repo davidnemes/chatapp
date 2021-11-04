@@ -16,7 +16,7 @@ module.exports = {
       userId: 1,
       groupId: 2,
       date: new Date(Date.now() + (5 * 60 * 1000)),
-      message: "Hello, ez itt a moderator csoport"
+      message: "Hello, ez itt privát csoport"
     }], {})
 
   },
