@@ -93,7 +93,7 @@ export default {
             if (sessionStorage.getItem("user")) {
                 return JSON.parse(sessionStorage.getItem("user"))
             } else {
-                return { userId: 0, username: "default", role: { role: "user", weight: 10 }}
+                return { userId: 0, username: "default" }
             }
         },
         chatName() {
@@ -551,14 +551,14 @@ export default {
     justify-content: space-between !important;
     border-bottom: 2px solid lightgray;
 }
-#profileDiv, #navigationHeader, #chappDiv {
+#profileDiv, #navigationHeader, #chappDiv, #manageChat {
     align-items: center;
     cursor: pointer;
     display: flex;
     justify-content: left;
     border-radius: 3px;
 }
-#profileDiv:hover {
+#profileDiv:hover, #manageChat:hover {
     background-color: lightgray;
 }
 #navigationChats {

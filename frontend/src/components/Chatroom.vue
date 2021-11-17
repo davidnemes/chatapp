@@ -1,12 +1,10 @@
 <template>
     <div class="card card-bordered">
         <div class="card-header">
-            <h4 class="card-title m-0">
+            <h4 class="card-title m-0" id="manageChat" data-toggle="modal" data-target="#chatManagement">
+                <span class="mr-2">{{ chat.title }}</span>
                 <img :src="chat.type == 'group' ? `/images/grouppic-default.png` : `/images/${chat.picName}`" alt="..." class="avatar chatPic" onerror="this.src='/images/profpic-default.jpg'">
-                
-                <span class="ml-2">{{ chat.title }}</span>
             </h4>
-            <button class="btn btn-xs btn-secondary">Részletek</button>
         </div>
         <div class="ps-container ps-theme-default ps-active-y" id="chat-content">
             <!-- <div class="media media-chat">
@@ -53,15 +51,23 @@
             <input class="publisher-input" type="text" placeholder="Írj valamit..." v-model="newMsg">
             <button type="submit"  @click="postMsg" class="publisher-btn text-info"><i class="fa fa-paper-plane"></i></button>
         </form>
+
+        <!-- Elements with changing place -->
+        <ChatManagement id="chatManagement" :chat="chat" />
     </div>
 </template>
 
 <script>
+import ChatManagement from "./ChatManagement.vue"
+
 export default {
     name: "Chatroom",
     props: {
         msgObj: Object,
         chat: Object,
+    },
+    components: {
+        ChatManagement
     },
     data() {
         return {
@@ -189,6 +195,9 @@ export default {
 #chat-content {
     overflow-y: scroll !important;
     height: var(--chatRoomHeight) !important;
+}
+#manageChat {
+    margin-left: auto !important;
 }
 
 @media screen and (max-width: 500px) {
