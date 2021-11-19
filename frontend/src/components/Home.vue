@@ -7,7 +7,7 @@
                     <h4 class="m-0"><i>Chapp</i></h4>
                 </div>
                 <div class="dropdown">
-                    <div @click="toProfile" id="profileDiv" class="p-2" data-toggle="dropdown">
+                    <div id="profileDiv" class="p-2" data-toggle="dropdown">
                         <span class="mr-2">{{ user.username }}</span>
                         <img :src="`/images/${user.picName}`" alt="..." class="avatar" onerror="this.src='/images/profpic-default.jpg'">
                     </div>
@@ -57,7 +57,7 @@ export default {
     components: {
         Chatroom,
         UserManagement,
-        Chats
+        Chats,
     },
     data() {
         return {

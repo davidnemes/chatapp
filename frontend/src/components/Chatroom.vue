@@ -142,9 +142,11 @@ export default {
             event.preventDefault()
 
             let msg = this.newMsg
-            if (!msg) {
+            let msgArr = msg.split(" ")
+            if (!msg || msgArr.every(piece => piece.length == 0)) {
                 return
             }
+
             this.$emit("postMsg", msg)
 
             this.newMsg = ""
@@ -200,10 +202,4 @@ export default {
     margin-left: auto !important;
 }
 
-@media screen and (max-width: 500px) {
-    
-    .dropMini {
-        width: 50px;
-    }
-}
 </style>

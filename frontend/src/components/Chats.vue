@@ -1,13 +1,42 @@
 <template>
     <div>
-        <ul v-if="chatsObj.chats.length > 0" class="m-0 p-0">
+        <div>
+            <Searchbar :type="'full'" @gotResult="gotSearchRes" @clear="clearSearch" />
+            <div>
+                <i class="fas fa-plus mr-2"></i>
+                <p class="description m-0">Új csoport</p>
+            </div>
+        </div>
+
+        <!-- Search results -->
+        <div v-if="!search.clear && search.res.length > 0" class="m-0 p-0">
+            <h4 class="m-0 alert">Eredmények:</h4>
+            <ul class="m-0 p-0">
+                <li class="chatLink m-2 p-2"
+                    v-for="res, index in search.res"
+                    :key="index">
+                    <img v-if="res.type == 'group'" :src="`/images/grouppic-default.png`" alt="..." class="avatar chatPic" onerror="this.src='/images/grouppic-default.png'">
+                    <img v-if="res.type == 'user'" :src="`/images/${res.picName}`" alt="..." class="avatar chatPic" onerror="this.src='/images/profpic-default.jpg'">
+                    <h6 class="m-0">
+                        {{ res.title }} {{ res.state }}
+                    </h6>
+
+                </li>
+            </ul>
+        </div>
+        <div v-else-if="!search.clear && search.res.length == 0">
+            <h5 class="alert alert-secondary m-2">Nincs találat...</h5>
+        </div>
+
+        <!-- Chatek -->
+        <ul v-else-if="chatsObj.chats.length > 0" class="m-0 p-0">
             <li class="chatLink m-2 p-2"
                 v-for="chat, index in renderChats"
                 :key="index"
                 :class="currentChatId == chat.elId ? 'activeChat' : ''"
                 :id="chat.elId"
                 @click="toChat">
-                <img v-if="chat.group" :src="`/images/grouppic-default.png`" data-child="true" alt="..." class="avatar chatPic" onerror="this.src='/images/grouppic-default.jpg'">
+                <img v-if="chat.group" :src="`/images/grouppic-default.png`" data-child="true" alt="..." class="avatar chatPic" onerror="this.src='/images/grouppic-default.png'">
                 <img v-if="chat.private" :src="`/images/${chat.picName}`" data-child="true" alt="..." class="avatar chatPic" onerror="this.src='/images/profpic-default.jpg'">
                 <h6 class="m-0" :class="chat.font_weight" data-child="true">
                     {{ chat.title }}
@@ -22,14 +51,23 @@
 </template>
 
 <script>
+import Searchbar from "./Searchbar.vue"
+
 export default {
     name: "Chats",
     props: {
         chatsObj: Object,
     },
+    components: {
+        Searchbar,
+    },
     data() {
         return {
             currentChatId: null,
+            search: {
+                clear: true,
+                res: []
+            }
         }
     },
     computed: {
@@ -64,7 +102,15 @@ export default {
                 setTimeout(() => {
                     this.currentChatId = `${this.chatsObj.chats[0].type}-${this.chatsObj.chats[0].id}`
                 }, 100)
-            }    
+            }
+        },
+        gotSearchRes(res) {
+            this.search.clear = false
+            this.search.res = res
+            console.log(res);
+        },
+        clearSearch() {
+            this.search.clear = true
         }
     }
 }

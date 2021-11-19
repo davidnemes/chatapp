@@ -9,6 +9,7 @@ var tokenRouter = require('./routes/tokens.routes');
 var messageRouter = require('./routes/messages.routes');
 var groupMemberRouter = require('./routes/groupmembers.routes.js')
 var chatsRouter = require('./routes/chats.routes.js')
+var searchRouter = require('./routes/search.routes.js')
 
 var app = express();
 
@@ -28,6 +29,7 @@ app.use('/api/messages', messageRouter);
 app.use('/api/groupmembers', groupMemberRouter);
 app.use('/api/token', tokenRouter);
 app.use('/api/chats', chatsRouter);
+app.use('/api/search', searchRouter);
 
 // 404
 app.use('/*', (req, res, next) => res.sendFile(path.join(__dirname, "./static_views/404.html")))

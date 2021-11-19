@@ -27,7 +27,7 @@
                                 class="list-group-item"
                                 :class="setting.action == currAction ? 'list-group-item-primary' : ''">
 
-                                <i class="fas" :class="setting.red ? setting.icon + ' red' : ''"></i>
+                                <i class="fas" :class="setting.red ? setting.icon + ' red' : setting.icon"></i>
                                 <p class="description">{{ setting.text }}</p>
                             </li>
                         </ul>
@@ -65,8 +65,8 @@ export default {
     computed: {
         currAction() {
             if (this.active !== "") return this.active
-            if (this.chat.type == "group") return groupSettings[0].action
-            if (this.chat.type == "private") return privateSettings[0].action
+            if (this.chat.type == "group") return this.groupSettings[0].action
+            if (this.chat.type == "private") return this.privateSettings[0].action
 
             return "error"
         }
@@ -100,9 +100,10 @@ export default {
 p {
     margin: 0;
 }
+
 @media screen and (max-width: 500px) {
-    .description {
-        display: none;
+    .list-group-item {
+        justify-content: center;
     }
 }
 </style>
