@@ -101,7 +101,7 @@ p {
     margin: 0;
 }
 
-@media screen and (max-width: 500px) {
+@media screen and (max-width: 600px) {
     .list-group-item {
         justify-content: center;
     }

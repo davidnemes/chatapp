@@ -208,7 +208,7 @@ export default {
 #app {
     margin-top: val(--appMT);
 }
-@media screen and (max-width: 500px){
+@media screen and (max-width: 600px){
     #title {
         justify-content: center;
     }

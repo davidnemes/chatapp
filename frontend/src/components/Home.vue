@@ -43,7 +43,7 @@
             <a @click="renewLogin" class="alert-link" style="cursor: pointer;">Meghosszabítás</a>
         </div>
 
-        <UserManagement id="userManagement" @logout="logout" />
+        <UserManagement id="userManagement" @logout="logout" :chat="currentChat" />
     </div>
 </template>
 
@@ -551,14 +551,14 @@ export default {
     justify-content: space-between !important;
     border-bottom: 2px solid lightgray;
 }
-#profileDiv, #navigationHeader, #chappDiv, #manageChat {
-    align-items: center;
-    cursor: pointer;
+#profileDiv, #navigationHeader, #chappDiv, #manageChat, #newGroupDiv {
     display: flex;
+    align-items: center;
     justify-content: left;
+    cursor: pointer;
     border-radius: 3px;
 }
-#profileDiv:hover, #manageChat:hover {
+#profileDiv:hover, #manageChat:hover, #newGroupDiv:hover {
     background-color: lightgray;
 }
 #navigationChats {
@@ -576,8 +576,15 @@ export default {
     right: 5px;
 }
 
+/* Universal flexbox class */
+.flexBox {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-@media screen and (max-width: 500px) {
+
+@media screen and (max-width: 600px) {
     #navigationDiv {
         display: none;
     }

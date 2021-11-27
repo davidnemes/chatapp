@@ -2,9 +2,9 @@
     <div>
         <div>
             <Searchbar :type="'full'" @gotResult="gotSearchRes" @clear="clearSearch" />
-            <div>
-                <i class="fas fa-plus mr-2"></i>
-                <p class="description m-0">Új csoport</p>
+            <div class="m-1 p-2" id="newGroupDiv">
+                <i class="fas fa-plus mr-2" style="font-size: 1em"></i>
+                <p class="m-0">Új csoport</p>
             </div>
         </div>
 
@@ -12,13 +12,30 @@
         <div v-if="!search.clear && search.res.length > 0" class="m-0 p-0">
             <h4 class="m-0 alert">Eredmények:</h4>
             <ul class="m-0 p-0">
-                <li class="chatLink m-2 p-2"
+                <li class="chatLink m-2 p-2 border-bottom-0"
                     v-for="res, index in search.res"
                     :key="index">
-                    <img v-if="res.type == 'group'" :src="`/images/grouppic-default.png`" alt="..." class="avatar chatPic" onerror="this.src='/images/grouppic-default.png'">
-                    <img v-if="res.type == 'user'" :src="`/images/${res.picName}`" alt="..." class="avatar chatPic" onerror="this.src='/images/profpic-default.jpg'">
+                    <div class="flexBox">
+                        <img v-if="res.type == 'group'" :src="`/images/grouppic-default.png`" alt="..." class="avatar chatPic" onerror="this.src='/images/grouppic-default.png'">
+                        <img v-if="res.type == 'user'" :src="`/images/${res.picName}`" alt="..." class="avatar chatPic" onerror="this.src='/images/profpic-default.jpg'">
+                        <h6 class="mb-0 mt-0 ml-3">
+                            {{ res.title }}
+                        </h6>
+                    </div>
                     <h6 class="m-0">
-                        {{ res.title }} {{ res.state }}
+                        <div v-if="res.type == 'user'">
+                            <i v-if="res.state == 'stable'" class="fas fa-user-check"></i>
+                            <i v-else-if="res.state == 'pending'" class="fas fa-user-clock"></i>
+                            <i v-else-if="res.state == 'none'" class="fas fa-user-plus"
+                                :data-userId="res.userId" @click="addUser"></i>
+                            <i v-else class="fas fa-user"></i>
+                        </div>
+                        <div v-else-if="res.type == 'group'">
+                            <i v-if="res.state == 'member'" class="fas fa-user-check"></i>
+                            <i v-else-if="res.state == 'pending'" class="fas fa-user-clock"></i>
+                            <i v-else-if="res.state == 'not_member'" class="fas fa-user-plus"
+                                :data-groupId="res.groupId" @click="addGroup"></i>
+                        </div>
                     </h6>
 
                 </li>
@@ -104,6 +121,8 @@ export default {
                 }, 100)
             }
         },
+
+        // Search methods
         gotSearchRes(res) {
             this.search.clear = false
             this.search.res = res
@@ -111,7 +130,14 @@ export default {
         },
         clearSearch() {
             this.search.clear = true
-        }
+        },
+        // rendering changes userId to userid
+        addUser(e) {
+            console.log(e.target.dataset.userid);
+        },
+        addGroup(e) {
+            console.log(e.target.dataset.groupid);
+        },
     }
 }
 </script>
@@ -133,6 +159,10 @@ export default {
 
 ::-webkit-scrollbar-track {
     background: #ccebff;
+}
+
+.fas {
+    font-size: 1.75em;
 }
 </style>
 

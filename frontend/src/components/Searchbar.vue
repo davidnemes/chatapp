@@ -32,7 +32,6 @@ export default {
 
 
             this.timeout = setTimeout( async () => {
-                console.log("keresés kuldve");
                 let res = await this.axios(`/api/search/${this.type}`, "post", { val })
                 if (res.error) {
                     console.log("error");
