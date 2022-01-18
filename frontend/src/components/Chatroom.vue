@@ -1,7 +1,9 @@
 <template>
     <div class="card card-bordered">
         <div class="card-header">
-            <h4 class="card-title m-0" id="manageChat" data-toggle="modal" data-target="#chatManagement">
+            <!--    For now I removed chatManagement 
+                <h4 class="card-title m-0" id="manageChat" data-toggle="modal" data-target="#chatManagement"> -->
+            <h4 class="card-title m-0" id="manageChat">
                 <span class="mr-2">{{ chat.title }}</span>
                 <img :src="chat.type == 'group' ? `/images/grouppic-default.png` : `/images/${chat.picName}`" alt="..." class="avatar chatPic" onerror="this.src='/images/profpic-default.jpg'">
             </h4>
@@ -156,7 +158,7 @@ export default {
             setTimeout(() => {
                 let scroll = this.jQuery("#chat-content").prop("scrollHeight")
                 this.jQuery("#chat-content")[0].scrollTop = scroll
-            }, 25)
+            }, 10)
         },
         timeToWrite(date) {
             let now = new Date()

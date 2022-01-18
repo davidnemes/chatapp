@@ -21,7 +21,7 @@ const userWithChats = async (id) => {
         include: {
             model: GroupMember,
             as: "Membership",
-            attributes: ["id", "UserId", "GroupId"],
+            attributes: ["id", "UserId", "GroupId", "RoleId"],
             include: [
                 {
                     model: Group,

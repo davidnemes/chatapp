@@ -26,7 +26,8 @@ module.exports = (sequelize, DataTypes) => {
   GroupMember.init({
     GroupId: DataTypes.INTEGER,
     UserId: DataTypes.INTEGER,
-    RoleId: DataTypes.INTEGER
+    RoleId: DataTypes.INTEGER,
+    status: DataTypes.ENUM("pending", "stable", "deleted")
   }, {
     sequelize,
     modelName: 'GroupMember',

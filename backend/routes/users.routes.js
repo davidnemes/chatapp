@@ -14,7 +14,7 @@ router.use((req, res, next) => {
     next();
 });
 
-router.get('/', [authJwt.verifyToken], controller.findAll)
+// router.get('/', [authJwt.verifyToken], controller.findAll)
 
 router.post('/login', controller.login)
 router.post('/signup', controller.signup)

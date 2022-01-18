@@ -7,9 +7,10 @@ require('dotenv').config();
 var usersRouter = require('./routes/users.routes');
 var tokenRouter = require('./routes/tokens.routes');
 var messageRouter = require('./routes/messages.routes');
-var groupMemberRouter = require('./routes/groupmembers.routes.js')
+var groupRouter = require('./routes/groups.routes.js')
 var chatsRouter = require('./routes/chats.routes.js')
 var searchRouter = require('./routes/search.routes.js')
+var privConRouter = require('./routes/privcons.routes.js')
 
 var app = express();
 
@@ -24,9 +25,10 @@ app.use("/login", (req, res, next) => res.redirect("/"));
 app.use("/home", (req, res, next) => res.redirect("/"));
 
 // api routes
+app.use('/api/users/con', privConRouter); // privCon == Private Connection
 app.use('/api/users', usersRouter);
 app.use('/api/messages', messageRouter);
-app.use('/api/groupmembers', groupMemberRouter);
+app.use('/api/group', groupRouter);
 app.use('/api/token', tokenRouter);
 app.use('/api/chats', chatsRouter);
 app.use('/api/search', searchRouter);

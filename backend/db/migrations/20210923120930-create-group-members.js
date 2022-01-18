@@ -16,6 +16,10 @@ module.exports = {
       },
       RoleId: {
         type: Sequelize.INTEGER
+      },
+      status: {
+        type: Sequelize.ENUM("pending", "stable", "deleted"),
+        defaultValue: "pending"
       }
     });
   },

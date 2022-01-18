@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const { renameSync } = require("fs")
 
-const { User, Token, GroupMember } = require("../db/models");
+const { User, Token, GroupMember, PrivateConnection } = require("../db/models");
 const { genToken, random } = require("./tools")
 
 const login = async (req, res) => {
@@ -89,18 +89,27 @@ const signup = async (req, res) => {
             createdAt: now,
             updatedAt: now
         })
+
+        // default memberships, connections
         await GroupMember.create({
             UserId: user.id,
             GroupId: 1,
-            roleId: 1
-        })
+            RoleId: 1,
+            status: "stable",
+          })
+        await PrivateConnection.create({
+            userId_1: 1,
+            userId_2: user.id,
+            status: "stable",
+            createdAt: now,
+            updatedAt: now,
+          })
     } catch (err) {
         console.log(err);
         return res.status(500).json({ message: "Server error" })
     }
 
     // Remember Me
-
     let rmToken
     if (req.body.rememberMe) {
         rmToken = genToken()

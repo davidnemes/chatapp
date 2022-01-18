@@ -10,6 +10,9 @@
 
         <!-- Search results -->
         <div v-if="!search.clear && search.res.length > 0" class="m-0 p-0">
+            <h4 class="m-0 alert">A kereső fejlesztés alatt áll</h4>
+
+            <!--
             <h4 class="m-0 alert">Eredmények:</h4>
             <ul class="m-0 p-0">
                 <li class="chatLink m-2 p-2 border-bottom-0"
@@ -40,6 +43,7 @@
 
                 </li>
             </ul>
+            -->
         </div>
         <div v-else-if="!search.clear && search.res.length == 0">
             <h5 class="alert alert-secondary m-2">Nincs találat...</h5>
@@ -74,6 +78,7 @@ export default {
     name: "Chats",
     props: {
         chatsObj: Object,
+        user: Object,
     },
     components: {
         Searchbar,
@@ -126,18 +131,45 @@ export default {
         gotSearchRes(res) {
             this.search.clear = false
             this.search.res = res
-            console.log(res);
         },
         clearSearch() {
             this.search.clear = true
         },
         // rendering changes userId to userid
-        addUser(e) {
-            console.log(e.target.dataset.userid);
+        async addUser(e) {
+            let addedId = e.target.dataset.userid
+            let data = {
+                selfId: this.user.userId,
+                addedId,
+            }
+            let res = await this.axios("/api/users/con/new", "post", data)
+
+            if (this.handleMsg(res)) {
+                let index = this.search.res.findIndex(item => item.userId == addedId)
+                this.search.res[index].state = "pending"
+            } 
         },
-        addGroup(e) {
-            console.log(e.target.dataset.groupid);
+        async addGroup(e) {
+            let groupId = e.target.dataset.groupid
+            let data = {
+                selfId: this.user.userId,
+                groupId,
+            }
+
+            let res = await this.axios("/api/group/askentry", "post", data)
+            
+            if (this.handleMsg(res)) {
+                let index = this.search.res.findIndex(item => item.groupId == groupId)
+                this.search.res[index].state = "pending"
+            }
         },
+        handleMsg(res) {
+            if (res.error || res.data.message !== "ok") {
+                alert("error")
+                return false
+            }
+            return true
+        }
     }
 }
 </script>
