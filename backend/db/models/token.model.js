@@ -18,10 +18,11 @@ module.exports = (sequelize, DataTypes) => {
   };
   Token.init({
     token: DataTypes.STRING,
-    expiration: DataTypes.INTEGER
+    expiration: DataTypes.BIGINT
   }, {
     sequelize,
     modelName: 'Token',
+    tableName: 'tokens',
     timestamps: false
   });
   return Token;

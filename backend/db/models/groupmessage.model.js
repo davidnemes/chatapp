@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'GroupMessage',
+    tableName: 'groupMessages',
     timestamps: true,
     createdAt: "date",
     updatedAt: false,

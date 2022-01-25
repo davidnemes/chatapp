@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'PrivateMessage',
+    tableName: 'privateMessages',
     timestamps: true,
     createdAt: "date",
     updatedAt: false,

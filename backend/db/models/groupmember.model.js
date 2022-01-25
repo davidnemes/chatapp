@@ -31,6 +31,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'GroupMember',
+    tableName: 'groupMembers',
     timestamps: false,
   });
   return GroupMember;

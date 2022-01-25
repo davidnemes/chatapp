@@ -1,6 +1,6 @@
 const config = require("../config/auth.config");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { renameSync } = require("fs")
 
 const { User, Token, GroupMember, PrivateConnection } = require("../db/models");
@@ -80,7 +80,7 @@ const signup = async (req, res) => {
 
     // signing up
     let user
-    let encPw = await bcrypt.hash(pw, 10)
+    let encPw = await bcrypt.hashSync(pw, 10)
     try {
         let now = new Date()
         user = await User.create({
@@ -91,12 +91,14 @@ const signup = async (req, res) => {
         })
 
         // default memberships, connections
+        /*
         await GroupMember.create({
             UserId: user.id,
             GroupId: 1,
             RoleId: 1,
             status: "stable",
           })
+          */
         await PrivateConnection.create({
             userId_1: 1,
             userId_2: user.id,
@@ -155,8 +157,6 @@ const findAll = async (req, res) => {
 
 const changeUn = async (req, res) => {
     let { body } = req
-    console.log("from body: " + body.userId);
-    console.log("from accesstoken: " + req.userId);
     if (body.userId !== req.userId) {
         return res.status(400).json({ message: "Access Denied" })
     }
@@ -200,7 +200,7 @@ const changePw = async (req, res) => {
         return res.status(400).json({ message: "Invalid Credentials" })
     }
 
-    let encPw = await bcrypt.hash(body.newPw, 10)
+    let encPw = await bcrypt.hashSync(body.newPw, 10)
     try {
         await User.update({
             password: encPw,

@@ -11,7 +11,7 @@
     "prod": "npm run frontend_build && node ./bin/www"
   },
   "dependencies": {
-    "bcrypt": "^5.0.1",
+    "bcryptjs": "^2.4.3",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "dotenv": "^10.0.0",
@@ -21,9 +21,9 @@
     "multer": "^1.4.3",
     "sanitize-html": "^2.5.2",
     "sequelize": "^6.8.0",
+    "sequelize-cli": "^6.2.0",
     "sqlite3": "^5.0.2",
-    "ws": "^8.2.3",
-    "sequelize-cli": "^6.2.0"
+    "ws": "^8.2.3"
   },
   "devDependencies": {
     "nodemon": "^2.0.14"

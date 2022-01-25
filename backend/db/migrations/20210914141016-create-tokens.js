@@ -12,7 +12,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       expiration: {
-        type: Sequelize.INTEGER
+        type: Sequelize.BIGINT
       }
     });
   },
