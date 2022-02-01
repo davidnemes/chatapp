@@ -13,6 +13,8 @@ router.use((req, res, next) => {
 });
 
 router.post('/new', [authJwt.verifyToken], controller.askPermission)
+router.post('/accept', [authJwt.verifyToken], controller.accept)
+router.post('/reject', [authJwt.verifyToken], controller.reject)
 
 
 module.exports = router;

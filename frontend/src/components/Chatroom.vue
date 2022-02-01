@@ -27,26 +27,34 @@
                     <p class="meta"><time datetime="2018">00:06</time></p>
                 </div>
             </div> -->
-            <div v-if="msgObj.messages.length > 0 && !msgObj.nomessage">
-                <div class="media media-meta-day">Elértél a chat végére</div>
-                <div v-for="msgGroup, index in renderMsgs" 
-                    :key="index" 
-                    class="media media-chat"
-                    :class="msgGroup.self ? 'media-chat-reverse': ''"
-                    >
-                    <img v-if="!msgGroup.self" class="avatar" :src="msgGroup.imgSrc" alt="..." onerror="this.src='/images/profpic-default.jpg'">
-                    <div class="media-body">
-                        <p v-if="!msgGroup.self" class="meta">{{ msgGroup.un }}</p>
-                        <p v-for="msg, index in msgGroup.msgs" :key="index"> {{ msg }}</p>
-                        <p class="meta">{{ msgGroup.ttw }}</p>
+            <div v-if="pending">
+                <p><strong>{{ chat.title }}</strong> beszélgetést kezdeményezett veled.</p>
+                <button class="btn btn-success mr-3" @click="pendingRes('accept')">Elfogad</button>
+                <button class="btn btn-danger" @click="pendingRes('reject')">Elutasít</button>
+            </div>
+            
+            <div v-else>
+                <div v-if="msgObj.messages.length > 0 && !msgObj.nomessage">
+                    <div class="media media-meta-day">Elértél a chat végére</div>
+                    <div v-for="msgGroup, index in renderMsgs" 
+                        :key="index" 
+                        class="media media-chat"
+                        :class="msgGroup.self ? 'media-chat-reverse': ''"
+                        >
+                        <img v-if="!msgGroup.self" class="avatar" :src="msgGroup.imgSrc" alt="..." onerror="this.src='/images/profpic-default.jpg'">
+                        <div class="media-body">
+                            <p v-if="!msgGroup.self" class="meta">{{ msgGroup.un }}</p>
+                            <p v-for="msg, index in msgGroup.msgs" :key="index"> {{ msg }}</p>
+                            <p class="meta">{{ msgGroup.ttw }}</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div v-else-if="msgObj.nomessage">
-                <div class="media media-meta-day">A chat jelenleg üres</div>
-            </div>
-            <div v-else>
-                <p class="alert alert-warning m-2">Loading...</p>
+                <div v-else-if="msgObj.nomessage">
+                    <div class="media media-meta-day">A chat jelenleg üres</div>
+                </div>
+                <div v-else>
+                    <p class="alert alert-warning m-2">Loading...</p>
+                </div>
             </div>
         </div>
         <form class="publisher bt-1 border-light">
@@ -67,6 +75,7 @@ export default {
     props: {
         msgObj: Object,
         chat: Object,
+        pending: Boolean,
     },
     components: {
         ChatManagement
@@ -145,7 +154,7 @@ export default {
 
             let msg = this.newMsg
             let msgArr = msg.split(" ")
-            if (!msg || msgArr.every(piece => piece.length == 0)) {
+            if (!msg || msgArr.every(piece => piece.length == 0) || this.pending) {
                 return
             }
 
@@ -158,7 +167,7 @@ export default {
             setTimeout(() => {
                 let scroll = this.jQuery("#chat-content").prop("scrollHeight")
                 this.jQuery("#chat-content")[0].scrollTop = scroll
-            }, 10)
+            }, 1)
         },
         timeToWrite(date) {
             let now = new Date()
@@ -175,6 +184,9 @@ export default {
                 default:
                     return `${date.getFullYear()}. ${month}`
             }
+        },
+        pendingRes(res) {
+            this.$emit("gotPendingRes", res)
         },
         // pasted helper
         checkOverFlow(el) {

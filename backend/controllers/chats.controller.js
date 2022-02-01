@@ -40,12 +40,16 @@ const userWithChats = async (id) => {
     let cons = await PrivateConnection.findAll({
         where: {
             [Op.or]: [
-                { userId_1: id },
-                { userId_2: id }
+                { userId_1: id,
+                  status: "stable" },
+                { userId_2: id,
+                  status: "stable" },
+                { userId_2: id,
+                  status: "pending" }
             ],
-            status: "stable"
         }
     })
+    
     for(let i = 0; i< cons.length; i++) {
         let otherId = id == cons[i].userId_1 ? cons[i].userId_2 : cons[i].userId_1
         let otherUser = await User.findOne({
@@ -77,6 +81,7 @@ const userWithChats = async (id) => {
         toReturn.chats.push({
             private: true,
             type: "private",
+            status: con.status,
             id: con.id,
             title: con.otherUser.username,
             picName: con.otherUser.picName,

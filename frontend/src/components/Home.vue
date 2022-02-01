@@ -32,7 +32,12 @@
             <Chats id="navigationChats" :chatsObj="chatsObj" :user="user" @changeChat="chatChanged" ref="chats" />
         </div>
         <div id="chatroomDiv">
-            <Chatroom :msgObj="currentMessages" :chat="currentChat" @postMsg="msgPosted" ref="chatroom" />
+            <Chatroom :msgObj="currentMessages" 
+                :chat="currentChat" 
+                :pending="currentChat.pending"
+                @postMsg="msgPosted"
+                @gotPendingRes="handlePendingRes"
+                ref="chatroom" />
         </div>
 
         <!-- Elements with changing place -->
@@ -81,7 +86,8 @@ export default {
                 type: "group",
                 id: 1,
                 title: "Public",
-                picName: `/images/grouppic-default.png`
+                picName: `/images/grouppic-default.png`,
+                pending: false,
             },
 
             // cache for messages
@@ -122,11 +128,15 @@ export default {
             this.currentChat.type = data.chats[0].type
             this.currentChat.id = data.chats[0].id
             this.currentChat.title = data.chats[0].title
+            this.currentChat.pending = data.chats[0].status == "pending"
 
             this.chatsObj.chats = data.chats
             this.$refs.chats.selectFirst()
         },
         chatChanged(to) {
+            if (this.currentChat.id == to.chatId && this.currentChat.type == to.chatType) {
+                return
+            }
             // chhange chat
             this.currentChat.type = to.chatType
             this.currentChat.id = to.chatId
@@ -135,6 +145,7 @@ export default {
             })
             this.currentChat.title = this.chatsObj.chats[chatIndex].title
             this.currentChat.picName = this.chatsObj.chats[chatIndex].picName
+            this.currentChat.pending = this.chatsObj.chats[chatIndex].status == "pending"
             this.currentMessages.nomessage = false
 
             // load chat msgs
@@ -372,6 +383,30 @@ export default {
             } else {
                 alert("Mivel nem kérted bejelentkezésed megjegyzését, át leszel irányítva a bejelentkezéshez.")
                 this.logout()
+            }
+        },
+
+        // Pending connections
+        async handlePendingRes(res) {
+            let data = {
+                chatId: this.currentChat.id,
+            }
+            let serverRes = await this.axios(`/api/users/con/${res}`, "post", data)
+            if (serverRes.data.message != "ok") {
+                console.log("Server error");
+                return
+            }
+            let chatIndex = this.chatsObj.chats.findIndex(k => {
+                return k.id == this.currentChat.id && k.type == this.currentChat.type
+            })
+            if (res == "accept") {
+                this.chatsObj.chats[chatIndex].status = "stable"
+                this.currentChat.pending = false
+            } else if(res == "reject") {
+                this.chatsObj.chats.splice(chatIndex, 1)
+                this.chatChanged({ chatId: this.chatsObj.chats[0].id, chatType: this.chatsObj.chats[0].type })
+            } else {
+                return console.log("error in handling res");
             }
         },
 

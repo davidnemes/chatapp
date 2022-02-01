@@ -33,7 +33,7 @@ const wsController = async (ws, wss, req) => {
     }
 
     // New connection
-    console.log('WS -> A new client Connected!');
+    console.log('WS -> A new client Connected! ' + Date());
     ws.userId = userId
     ws.chats = (await userWithChats(userId)).chats
 

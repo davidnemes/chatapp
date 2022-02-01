@@ -10,9 +10,7 @@
 
         <!-- Search results -->
         <div v-if="!search.clear && search.res.length > 0" class="m-0 p-0">
-            <h4 class="m-0 alert">A kereső fejlesztés alatt áll</h4>
 
-            <!--
             <h4 class="m-0 alert">Eredmények:</h4>
             <ul class="m-0 p-0">
                 <li class="chatLink m-2 p-2 border-bottom-0"
@@ -43,7 +41,6 @@
 
                 </li>
             </ul>
-            -->
         </div>
         <div v-else-if="!search.clear && search.res.length == 0">
             <h5 class="alert alert-secondary m-2">Nincs találat...</h5>
