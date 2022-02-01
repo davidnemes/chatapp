@@ -16,6 +16,11 @@ export default {
             timeout: null,
         }
     },
+    methods: {
+        clear() {
+            this.value = ""
+        }
+    },
     watch: {
         value() {
             clearTimeout(this.timeout)

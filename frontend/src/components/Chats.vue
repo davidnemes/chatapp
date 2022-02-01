@@ -1,7 +1,7 @@
 <template>
     <div>
         <div>
-            <Searchbar :type="'full'" @gotResult="gotSearchRes" @clear="clearSearch" />
+            <Searchbar :type="'full'" @gotResult="gotSearchRes" @clear="clearSearch" ref="searchbar"/>
             <div class="m-1 p-2" id="newGroupDiv">
                 <i class="fas fa-plus mr-2" style="font-size: 1em"></i>
                 <p class="m-0">Új csoport</p>
@@ -15,7 +15,11 @@
             <ul class="m-0 p-0">
                 <li class="chatLink m-2 p-2 border-bottom-0"
                     v-for="res, index in search.res"
-                    :key="index">
+                    :key="index"
+                    @click="searchResClicked"
+                    :data-type="res.type"
+                    :data-chatid="res.chatId"
+                    data-parent="true">
                     <div class="flexBox">
                         <img v-if="res.type == 'group'" :src="`/images/grouppic-default.png`" alt="..." class="avatar chatPic" onerror="this.src='/images/grouppic-default.png'">
                         <img v-if="res.type == 'user'" :src="`/images/${res.picName}`" alt="..." class="avatar chatPic" onerror="this.src='/images/profpic-default.jpg'">
@@ -28,14 +32,14 @@
                             <i v-if="res.state == 'stable'" class="fas fa-user-check"></i>
                             <i v-else-if="res.state == 'pending'" class="fas fa-user-clock"></i>
                             <i v-else-if="res.state == 'none'" class="fas fa-user-plus"
-                                :data-userId="res.userId" @click="addUser"></i>
+                                :data-userId="res.userid" @click="addUser"></i>
                             <i v-else class="fas fa-user"></i>
                         </div>
                         <div v-else-if="res.type == 'group'">
                             <i v-if="res.state == 'member'" class="fas fa-user-check"></i>
                             <i v-else-if="res.state == 'pending'" class="fas fa-user-clock"></i>
                             <i v-else-if="res.state == 'not_member'" class="fas fa-user-plus"
-                                :data-groupId="res.groupId" @click="addGroup"></i>
+                                :data-groupId="res.groupid" @click="addGroup"></i>
                         </div>
                     </h6>
 
@@ -109,12 +113,15 @@ export default {
 
             let datas = t.id.split("-")
 
-            let toParentComp = {
+            let toParentComponent = {
                 chatType: datas[0],
                 chatId: datas[1]
             }
-            this.$emit("changeChat", toParentComp)
-            this.currentChatId = t.id
+            this.changeChat(toParentComponent)
+        },
+        changeChat(k) {
+            this.$emit("changeChat", k)
+            this.currentChatId = `${k.chatType}-${k.chatId}`
         },
         selectFirst() {
             if (this.currentChatId === null) {
@@ -131,9 +138,20 @@ export default {
         },
         clearSearch() {
             this.search.clear = true
+            this.$refs.searchbar.clear()
         },
-        // rendering changes userId to userid
+        searchResClicked(event) {
+            let el = event.target
+            while(el.dataset.parent != "true") {
+                el = el.parentElement
+            }
+            if (!el.dataset.type || !el.dataset.chatid) return
+            let type = el.dataset.type == "user" ? "private" : el.dataset.type
+            this.changeChat({ chatType: type, chatId: el.dataset.chatid})
+            this.clearSearch()
+        },
         async addUser(e) {
+            // rendering changes userId to userid
             let addedId = e.target.dataset.userid
             let data = {
                 selfId: this.user.userId,

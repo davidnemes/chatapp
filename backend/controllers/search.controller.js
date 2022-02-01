@@ -64,6 +64,7 @@ const findFull = async (req, res) => {
                 }})
                 let state = con ? con.status : "none"
                 results[i].state = state
+                if (con) results[i].chatId = con.id
                 break;
             case "group":
                 let member = await GroupMember.findOne({where: {
@@ -71,6 +72,7 @@ const findFull = async (req, res) => {
                     groupId: results[i].groupId
                 }})
                 results[i].state = member ? "member" : "not_member"
+                if (member) results[i].chatId = member.GroupId
                 break;
         }
         
