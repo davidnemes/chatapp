@@ -29,7 +29,12 @@
                     </div>
                 </div>
             </header>
-            <Chats id="navigationChats" :chatsObj="chatsObj" :user="user" @changeChat="chatChanged" ref="chats" />
+            <Chats id="navigationChats" 
+                :chatsObj="chatsObj" 
+                :user="user" 
+                @changeChat="chatChanged"
+                @createdNewGroup="loadChats"
+                ref="chats" />
         </div>
         <div id="chatroomDiv">
             <Chatroom :msgObj="currentMessages" 

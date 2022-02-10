@@ -1,3 +1,4 @@
+const res = require("express/lib/response")
 const { Group, GroupMessage, User, GroupMember } = require("../db/models")
 
 const findAllMember = async (req, res) => {
@@ -28,7 +29,7 @@ const askEntry = async (req, res) => {
             UserId: selfId,
             GroupId: groupId,
             RoleId: 1,
-            status: "pending"
+            status: "asked"
         })
 
         return res.status(200).json({ message: "ok" })
@@ -39,10 +40,33 @@ const askEntry = async (req, res) => {
     
 }
 
+const createGroup = async (req,res) => {
+    let { title, publicity } = req.body
+    let { userId } = req
+    let isPrivate = publicity == "private"
+
+    try {
+        let newGroup = await Group.create({
+            title,
+            isPrivate
+        })
+        await GroupMember.create({
+            UserId: userId,
+            GroupId: newGroup.id,
+            RoleId: 3,
+            status: "stable"
+        })
+        return res.status(200).json({ message: "ok" })
+    } catch (err) {
+        return res.status(500).json({ message: "Server error" })
+    }
+}
+
 
 
 
 module.exports = {
     findAllMember,
-    askEntry
+    askEntry,
+    createGroup
 }

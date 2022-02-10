@@ -15,7 +15,6 @@ const findFull = async (req, res) => {
         if (points < 1) {
             return
         }
-
         results.push({
             type: "user",
             title: u.username,
@@ -29,7 +28,6 @@ const findFull = async (req, res) => {
         if (points < 1) {
             return
         }
-
         results.push({
             type: "group",
             title: g.title,
@@ -82,20 +80,18 @@ const findFull = async (req, res) => {
 }
 
 const compare = (value, target) => {
-    let val = value
-    let targ = target
+    let val = value.toLowerCase()
+    let targ = target.toLowerCase()
     // normalize
     let max = val.length > targ.length ? val.length : targ.length
     for (let i = 0; i < max; i++) {
         normalize.forEach(rule => {
-            if (rule.old.includes(val[i])) {
-                val = replaceAt(val, i, rule.new)
-            }
-            if (rule.old.includes(targ[i])) {
-                targ = replaceAt(targ, i, rule.new)
-            }
+            if (rule.old.includes(val[i])) val = replaceAt(val, i, rule.new)
+            if (rule.old.includes(targ[i])) targ = replaceAt(targ, i, rule.new)
         })
     }
+    val = val.trim()
+    targ = targ.trim()
     // INSPECTIONS
     // complete accuracy
     if (targ == val) return 10
@@ -111,19 +107,42 @@ const compare = (value, target) => {
         ok: 0,
         inc: 0,
     }
+    let targLettersUsed = []
     for (let i = 0; i < val.length; i++) {
+        if (targ[i] === undefined) break
+        // right place
         if (targ[i] == val[i]) {
             lettersOK.ok += 1
+            targLettersUsed.push(i)
             continue
         }
 
-        if (targ.includes(val[i])) lettersOK.inc += 1
+        // include
+        if (targ.includes(val[i])) {
+            for (let innerI = 0; innerI < targ.length; innerI++) {
+                if (targ[innerI] == val[i] && !targLettersUsed.includes(innerI)) {
+                    lettersOK.inc += 1
+                    targLettersUsed.push(innerI)
+                    break
+                }
+                
+            }
+        }
     }
     let okPercentage = parseInt((lettersOK.ok / val.length) *100)
-    if (okPercentage < 20 && lettersOK.inc < 2) {
-        return 0
+    let incPercentage = parseInt((lettersOK.inc / val.length) *100)
+    if (okPercentage >= 25 || incPercentage >= 20) {
+        // significant incPercentage
+        if (okPercentage < 25 && incPercentage >= 50 && val.length < 8) {
+            return (okPercentage/10) + (incPercentage/10 /2.5)
+        } else if (okPercentage < 25 && incPercentage >= 75) {
+            return (okPercentage/10) + (incPercentage/10 /2.5)
+        }
+
+        return (okPercentage/10) + (lettersOK.inc * 0.25)
     }
-    return (okPercentage/10) + (lettersOK.inc * 0.25)
+
+    return 0
 }
 
 // HELPERS

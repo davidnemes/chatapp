@@ -2,7 +2,7 @@
     <div>
         <div>
             <Searchbar :type="'full'" @gotResult="gotSearchRes" @clear="clearSearch" ref="searchbar"/>
-            <div class="m-1 p-2" id="newGroupDiv">
+            <div class="m-1 p-2" id="newGroupDiv" data-toggle="modal" data-target="#newGroupModal">
                 <i class="fas fa-plus mr-2" style="font-size: 1em"></i>
                 <p class="m-0">Új csoport</p>
             </div>
@@ -69,6 +69,40 @@
         <div v-else>
             <p class="alert alert-warning m-2">Loading...</p>
         </div>
+
+        <!-- Modal for new Group -->
+        <div class="modal fade" id="newGroupModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Új csoport létrehozása</h4>
+                    <button type="button" class="close" id="closeNewGroupModal" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label>
+                                <p>Mi legyen a csoport neve?</p>
+                                <input type="text" class="form-control" v-model="newGroupName">
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <p>Privát vagy publikus csoport legyen?</p>
+                            <label>
+                                <input type="radio" class="form-check-input" value="public" v-model="newGroupPublicity"> Publikus
+                            </label>
+                            <br>
+                            <label>
+                                <input type="radio" class="form-check-input" value="private" v-model="newGroupPublicity"> Privát
+                            </label>
+                        </div>
+                        <button @click="newGroup" class="btn btn-primary">Létrehozás</button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+        </div>
     </div>
 </template>
 
@@ -90,7 +124,9 @@ export default {
             search: {
                 clear: true,
                 res: []
-            }
+            },
+            newGroupName: "",
+            newGroupPublicity: "public",
         }
     },
     computed: {
@@ -124,11 +160,9 @@ export default {
             this.currentChatId = `${k.chatType}-${k.chatId}`
         },
         selectFirst() {
-            if (this.currentChatId === null) {
-                setTimeout(() => {
-                    this.currentChatId = `${this.chatsObj.chats[0].type}-${this.chatsObj.chats[0].id}`
-                }, 100)
-            }
+            setTimeout(() => {
+                this.currentChatId = `${this.chatsObj.chats[0].type}-${this.chatsObj.chats[0].id}`
+            }, 10)
         },
 
         // Search methods
@@ -184,6 +218,22 @@ export default {
                 return false
             }
             return true
+        },
+
+        // New Group
+        async newGroup(event) {
+            event.preventDefault()
+            let data = {
+                title: this.newGroupName,
+                publicity: this.newGroupPublicity
+            }
+            let res = await this.axios("/api/group/new", "post", data)
+            if (res.data.message !== "ok") {
+                console.log("server error");
+                return
+            }
+            this.$emit("createdNewGroup")
+            this.jQuery("#closeNewGroupModal")[0].click()
         }
     }
 }
