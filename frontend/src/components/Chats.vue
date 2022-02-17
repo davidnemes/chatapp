@@ -67,7 +67,7 @@
             </li>
         </ul>
         <div v-else>
-            <p class="alert alert-warning m-2">Loading...</p>
+            <p class="alert alert-warning m-2">Töltés...</p>
         </div>
 
         <!-- Modal for new Group -->

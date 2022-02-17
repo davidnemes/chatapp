@@ -1,17 +1,26 @@
-const res = require("express/lib/response")
-const { Group, GroupMessage, User, GroupMember } = require("../db/models")
+const { Group, Role, User, GroupMember } = require("../db/models")
 
 const findAllMember = async (req, res) => {
-    const id = req.params.groupId
+    const groupId = req.params.groupId
     try {
-        let messages = await Group.findOne({
-            where: { id: id },
-            include: {
+        let members = await GroupMember.findAll({
+            where: {
+                GroupId: groupId,
+                status: "stable"
+            },
+            include: [
+                {
                     model: User,
-                    attributes: ['id', 'username']
-            }
+                    attributes: ['id', 'username', 'picName', ]
+                },
+                {
+                    model: Role,
+                    attributes: ['role', 'weight']
+                }
+
+            ]
         })
-        return res.status(200).json(messages)
+        return res.status(200).json(members)
     } catch (err) {
         console.log(err);
         return res.status(500).json({ message: "Server error" })

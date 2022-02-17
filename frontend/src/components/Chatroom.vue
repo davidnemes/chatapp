@@ -1,9 +1,7 @@
 <template>
     <div class="card card-bordered">
         <div class="card-header">
-            <!--    For now I removed chatManagement 
-                <h4 class="card-title m-0" id="manageChat" data-toggle="modal" data-target="#chatManagement"> -->
-            <h4 class="card-title m-0" id="manageChat">
+            <h4 class="card-title m-0" id="manageChat" data-toggle="modal" data-target="#chatManagement">
                 <span class="mr-2">{{ chat.title }}</span>
                 <img :src="chat.type == 'group' ? `/images/grouppic-default.png` : `/images/${chat.picName}`" alt="..." class="avatar chatPic" onerror="this.src='/images/profpic-default.jpg'">
             </h4>
@@ -53,7 +51,7 @@
                     <div class="media media-meta-day">A chat jelenleg üres</div>
                 </div>
                 <div v-else>
-                    <p class="alert alert-warning m-2">Loading...</p>
+                    <p class="alert alert-warning m-2">Töltés...</p>
                 </div>
             </div>
         </div>
@@ -63,7 +61,7 @@
         </form>
 
         <!-- Elements with changing place -->
-        <ChatManagement id="chatManagement" :chat="chat" />
+        <ChatManagement id="chatManagement" :chat="chat" :user="user" />
     </div>
 </template>
 
@@ -76,6 +74,7 @@ export default {
         msgObj: Object,
         chat: Object,
         pending: Boolean,
+        user: Object
     },
     components: {
         ChatManagement

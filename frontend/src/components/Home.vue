@@ -40,6 +40,7 @@
             <Chatroom :msgObj="currentMessages" 
                 :chat="currentChat" 
                 :pending="currentChat.pending"
+                :user="user"
                 @postMsg="msgPosted"
                 @gotPendingRes="handlePendingRes"
                 ref="chatroom" />
@@ -93,6 +94,7 @@ export default {
                 title: "Public",
                 picName: `/images/grouppic-default.png`,
                 pending: false,
+                role: {}
             },
 
             // cache for messages
@@ -134,6 +136,7 @@ export default {
             this.currentChat.id = data.chats[0].id
             this.currentChat.title = data.chats[0].title
             this.currentChat.pending = data.chats[0].status == "pending"
+            if (data.chats[0].type == "group") this.currentChat.role = data.chats[0].userRole
 
             this.chatsObj.chats = data.chats
             this.$refs.chats.selectFirst()
@@ -145,12 +148,12 @@ export default {
             // chhange chat
             this.currentChat.type = to.chatType
             this.currentChat.id = to.chatId
-            let chatIndex = this.chatsObj.chats.findIndex(k => {
-                return k.id == to.chatId && k.type == to.chatType
-            })
+            let chatIndex = this.chatsObj.chats.findIndex(k => k.id == to.chatId && k.type == to.chatType)
             this.currentChat.title = this.chatsObj.chats[chatIndex].title
             this.currentChat.picName = this.chatsObj.chats[chatIndex].picName
             this.currentChat.pending = this.chatsObj.chats[chatIndex].status == "pending"
+            if (to.chatType == "group") this.currentChat.role = this.chatsObj.chats[chatIndex].userRole
+            else this.currentChat.role = {}
             this.currentMessages.nomessage = false
 
             // load chat msgs
@@ -597,9 +600,10 @@ export default {
     justify-content: left;
     cursor: pointer;
     border-radius: 3px;
+    padding: 3px;
 }
 #profileDiv:hover, #manageChat:hover, #newGroupDiv:hover {
-    background-color: lightgray;
+    background-color: rgb(190, 190, 210);
 }
 #navigationChats {
     overflow-y: scroll;
