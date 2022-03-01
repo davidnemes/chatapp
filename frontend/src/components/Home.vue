@@ -33,7 +33,7 @@
                 :chatsObj="chatsObj" 
                 :user="user" 
                 @changeChat="chatChanged"
-                @createdNewGroup="loadChats"
+                @createdNewGroup="loadChats('from_newgroup')"
                 ref="chats" />
         </div>
         <div id="chatroomDiv">
@@ -128,17 +128,25 @@ export default {
             window.location.href = "/"
         },
 
-        async loadChats() {
+        async loadChats(origin) {
             let data = (await this.axios("/api/chats/"+ this.user.userId)).data
             if (!data) { return false }
-            
-            this.currentChat.type = data.chats[0].type
-            this.currentChat.id = data.chats[0].id
-            this.currentChat.title = data.chats[0].title
-            this.currentChat.pending = data.chats[0].status == "pending"
-            if (data.chats[0].type == "group") this.currentChat.role = data.chats[0].userRole
 
             this.chatsObj.chats = data.chats
+            let x = data.chats[0]
+            if (origin == "from_newgroup") {
+                this.chatChanged({ chatType: x.type, chatId: x.id })
+                this.$refs.chats.selectFirst()
+                return 
+            }
+            
+            this.currentChat.type = x.type
+            this.currentChat.id = x.id
+            this.currentChat.title = x.title
+            this.currentChat.picName = x.picName
+            this.currentChat.pending = x.status == "pending"
+            if (x.type == "group") this.currentChat.role = x.userRole
+
             this.$refs.chats.selectFirst()
         },
         chatChanged(to) {
@@ -268,7 +276,6 @@ export default {
             const webSocket = new WebSocket(`ws://${location.host}/?token=${res.data.token}&id=${this.user.userId}`);
             webSocket.onerror = (err) => {
                 if(err.eventPhase === 2) {
-                    // Maybe the LanIP was set poorly.
                     console.log("WS -> Error at WS connection.")
                 } else {
                     console.log("WS -> Error at WS.")
@@ -441,10 +448,8 @@ export default {
             }
 
             // Set notifications
-            if (!this.isHttps) {
-                console.log("Az Értesítések nem elérhetők nem HTTPS oldalon");
-            }
             try {
+                if (!this.isHttps) console.log("Az Értesítések nem elérhetők nem HTTPS oldalon");
                 this.notis = Notification.permission
             } catch (error) {
                 console.log("A böngésződben nem elérhetőek az értesítések");
@@ -507,7 +512,7 @@ export default {
         setCSSandHeights() {
             this.cssRoot = document.querySelector(':root')
             this.setCssVarValue("--innerHeight", window.innerHeight)
-            this.setCssVarValue("--chatRoomHeight", window.innerHeight - 120)
+            this.setCssVarValue("--chatRoomHeight", window.innerHeight - 121)
             this.setCssVarValue("--appMT", 0)
         },
 
@@ -607,7 +612,7 @@ export default {
 }
 #navigationChats {
     overflow-y: scroll;
-    height: calc(var(--innerHeight) - 62px);
+    height: calc(var(--innerHeight) - 64px);
 }
 
 .dropMini {

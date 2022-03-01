@@ -71,11 +71,17 @@ const createGroup = async (req,res) => {
     }
 }
 
+const setMember = async (req, res) => {
+
+}
+
+
 
 
 
 module.exports = {
     findAllMember,
     askEntry,
-    createGroup
+    createGroup,
+    setMember
 }

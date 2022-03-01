@@ -60,16 +60,22 @@
                                 <div v-if="cache.members[selectedUserIndex].user.id != user.userId">
                                     <button class="btn btn-outline-success m-1" 
                                         v-if="cache.members[selectedUserIndex].role.weight == 10 &&
-                                            chat.role.weight >= 20">
+                                            chat.role.weight >= 20"
+                                        @click="changeMember('giveMod')">
                                         Moderátor jog adása</button>
                                     <button class="btn btn-outline-warning m-1" 
                                         v-if="cache.members[selectedUserIndex].role.weight == 20 &&
-                                            chat.role.weight >= 20">
+                                            chat.role.weight >= 20"
+                                        @click="changeMember('takeMod')">
                                         Moderátor jog elvétele</button>
                                     <button class="btn btn-outline-danger m-1" 
                                         v-if="cache.members[selectedUserIndex].role.weight == 10 &&
-                                            chat.role.weight >= 20">
+                                            chat.role.weight >= 20"
+                                        @click="changeMember('deleteFromGroup')">
                                         Törlés a csoportból</button>
+                                </div>
+                                <div v-if="success != ''" class="alert alert-success mt-4">
+
                                 </div>
                             </div>
                             <div v-else>
@@ -127,6 +133,8 @@ export default {
                 members: []
             },
             selectedUserIndex: -1,
+
+            success: "",
         }
     },
     methods: {
@@ -140,6 +148,7 @@ export default {
                 }
             }
         },
+        // group member methods
         async getMembers() {
             let res = await this.axios("/api/group/members/"+this.chat.id)
             if (res.error) return this.handleError(res)
@@ -158,6 +167,17 @@ export default {
         },
         backFromManageMember() {
             this.selectedUserIndex = -1
+        },
+        async changeMember(task) {
+            let data = {
+                groupId: this.chat.id,
+                targetUserId: this.cache.members[this.selectedUserIndex].id,
+                task,
+            }
+            let res = await this.axios("/group/member/set", "put", data)
+            if (res.error) return this.handleError(res)
+            this.success = "Az utasítás teljesült"
+            setTimeout(() => this.success = "", 5000)
         },
         // needed an helper function to clear things
         closeChatManagement() {

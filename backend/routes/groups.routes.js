@@ -15,6 +15,7 @@ router.use((req, res, next) => {
 router.post('/askentry', [authJwt.verifyToken], controller.askEntry)
 router.post('/new', [authJwt.verifyToken], controller.createGroup)
 router.get('/members/:groupId', [authJwt.verifyToken], controller.findAllMember)
+router.put('/member/set', [authJwt.verifyToken], controller.setMember)
 
 
 module.exports = router;

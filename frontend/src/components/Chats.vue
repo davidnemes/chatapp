@@ -233,6 +233,8 @@ export default {
                 return
             }
             this.$emit("createdNewGroup")
+            this.newGroupName = ""
+            this.newGroupPublicity = "public"
             this.jQuery("#closeNewGroupModal")[0].click()
         }
     }
